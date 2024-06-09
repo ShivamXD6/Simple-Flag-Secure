@@ -7,7 +7,7 @@
 ![Magisk](https://img.shields.io/badge/Magisk-8A2BE2?style=for-the-badge&logo=magisk&logoColor=white)
 ![Root](https://img.shields.io/badge/Root-ff0000?style=for-the-badge&logo=superuser&logoColor=white)
 
-##❔ Why this module? when there's already Disable Flag Secure by MehediHJOy.
+## ❔ Why this module? when there's already Disable Flag Secure by MehediHJOy.
 
 - 💾 **Small in Size**: MehediHJoy (Disable Flag Secure) is too bloated with many useless functions (for purpose of the module) and binaries. It is minimal and faster.
 
