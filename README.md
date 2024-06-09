@@ -26,11 +26,11 @@
 
 Removing Screenshots Restrictions from Apps is straight-forward. Follow these simple steps:
 
-1. **Download & Install**: Open Magisk/KSU/APatch Manager, go to the Modules section, tap the '+' icon, and select the StevenBlock Module zip file to install.
+1. **Download & Install**: Open Magisk/KSU/APatch Manager, go to the Modules section, tap the '+' icon, and select the Simple Flag Secure Module zip file to install.
    
 2. **Reboot**: Reboot your device to activate .
    
-3. **Enjoy**: Experience a secure, refined digital journey on your rooted device with StevenBlock.
+3. **Enjoy**: Done Check by taking screenshots from apps like Whatsapp One Time View Photos.
 
 For any inquiries or support, feel free to contact me on [Telegram](https://telegram.me/ShastikXD).
 
