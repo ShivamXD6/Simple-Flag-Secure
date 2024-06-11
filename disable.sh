@@ -335,14 +335,19 @@ apktool b "$TMPDIR/services" -o "$MOD/services.jar"
 echo ""
 sfs " 🖇️ - Replacing Modified Dex File Only"
 Smali="$(getprop SMALI)"
+
+# Loop less then 20 times to get Smali Dir Name
 cnt=1
 while [[ "$cnt" -lt 20 && "$(basename "$Smali")" != "smali" && "$(basename "$Smali")" != "smali_classes2" && "$(basename "$Smali")" != "smali_classes3" && "$(basename "$Smali")" != "smali_classes4" && "$(basename "$Smali")" != "smali_classes5" ]]; do
     Smali=$(dirname "$Smali")   
     cnt=$((cnt + 1))
 done
 
+# Check if Smali dir exist
 if [ "$cnt" -lt 20 ]; then
 Smali=$(basename "$Smali")
+
+# If Smali Dir exists, change classes.dex according to Smali dir 
 if [[ "$(basename "$Smali")" == "smali" ]]; then
     Class="classes.dex"
 else
@@ -350,12 +355,15 @@ else
     Class="classes${suffix}.dex"
 fi
 
+# Change Only Modified classes.dex file, keep rest untouched
 mkdir -p "$TMPDIR/ORG"
 mkdir -p "$TMPDIR/MOD"
 unzip -o "$STOCK"/services.jar -d "$TMPDIR/ORG" >> /dev/null;
 unzip -o "$MOD/services.jar" -d "$TMPDIR/MOD" >> /dev/null;
 cp -af "$TMPDIR/MOD/$Class" "$TMPDIR/ORG/$Class"
 cd "$TMPDIR/ORG"
+
+# Recompress services.jar to avoid breaking anything
 $BIN/zip -r "$MOD"/services.jar . >> /dev/null;
 sfs " 🔗 - Compressing Services JAR"
 cp -af "$MOD/services.jar" "$DB/services.jar"
