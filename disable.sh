@@ -5,7 +5,8 @@ BIN="$MODPATH/system/bin"
 STOCK="/system/framework"
 MOD="$MODPATH/system/framework"
 DB="/data/#SFS"
-mkdir -p "$DB"
+TMPDIR="$DB"/TMP
+mkdir -p "$TMPDIR"
 disable='
     .locals 1
 
@@ -29,8 +30,8 @@ clean() {
   rm -rf "$BIN/apktool.jar"
   rm -rf "$BIN/zip"
   rm -rf "$BIN/bash"
+  rm -rf "$DB"/TMP
 }
-
 
 # Set Default value
 setdefault() {
@@ -42,6 +43,7 @@ savestate() {
     setdefault "$1" "$(md5sum "$2")"
 }
 
+# Set Permissions
 set_perm() {
   chown "$1:$2" "$4"
   chmod "$3" "$4"
@@ -261,7 +263,6 @@ smali_kit() {
    fi
 }
 
-
 # Function to run JAR files using dalvikvm
 run_jar() {
     local dalvikvm file main 
@@ -317,7 +318,7 @@ sfs " ⚡ - Flashing again this module on same rom will be faster. "
 
 # Decompiling with apktool
 sfs " 👾 - Decompiling services.jar"
-apktool -f d "$STOCK"/services.jar -o "$TMPDIR/services"
+apktool d "$STOCK"/services.jar -o "$TMPDIR/services"
 
 # Apply smali patches
 echo ""
