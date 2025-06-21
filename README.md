@@ -61,6 +61,18 @@
 
 📬 **Need help?** Message me anytime on **[Telegram](https://telegram.me/ShastikXD)**.
 
+## 🙏 Support & Donations
+
+If you find Simple Flag Secure helpful and want to support development, you can donate here:
+
+💰 **PayPal:** [Donate via PayPal](https://paypal.me/ShivamXD6)
+
+📲 **SuperMoney:** UPI ID - **shivam.dhage@superyes**
+
+🔗 **GPay UPI QR Code:** [Donate via UPI QR](https://i.ibb.co/5g4J2RXR/1f38d6d7-a8a2-4696-88e6-9cf503e0592c.png)
+
+Every contribution helps keep the project alive and improved! Thank you! 😊
+
 ## 🙌 Credits
 
 💡 **[MehediHJoy](https://xdaforums.com/t/module-disable-flag-secure-v9-0-by-mehedi-h-joy.4490475/)**  
