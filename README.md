@@ -7,17 +7,23 @@
 ![Magisk](https://img.shields.io/badge/Magisk-8A2BE2?style=for-the-badge&logo=magisk&logoColor=white)
 ![Root](https://img.shields.io/badge/Root-ff0000?style=for-the-badge&logo=superuser&logoColor=white)
 
-## ❔ Why this module? when there's already Disable Flag Secure by MehediHJOy.
+## ❔ Why this module? When there's already Disable Flag Secure by MehediHJoy.
 
-- 💾 **Small in Size**: MehediHJoy (Disable Flag Secure) is too bloated with many useless functions (for purpose of the module) and binaries. It is minimal and faster.
+### MOD-V1 and MOD-V2
 
-- ⭐ **Supports KSU and APatch**: As the Disable Flag Secure doesn't have any updates since 2022, so this doesn't support KSU or APatch. But Simple Flag Secure Does :)
+- 💾 **Lightweight**: No bloated binaries or extras — faster and minimal than MehediHJoy's version.
+- ⭐ **Root Managers Support**: Fully compatible with Magisk, KernelSU, APatch and their forks, unlike the outdated original.
+- 🖥️ **Dex-Only Patch**: Only modifies required DEX files, avoiding issues like broken power button on Android 14.
+- 💬 **Readable Code**: Clean, commented code with fewer lines (300 vs 2000), easy to understand.
+- 🔄 **Fast Restore**: Creates backup of services.jar for quicker reflash after removal.
 
-- 🖥️ **Using Only Modified Dex**: Flashing Disable Flag Secure in Magisk may sometimes give issues (like for me on android 14) power button stop working. This module solves this by only adding Modified Dex Files, Keeping rest untouch. 
+### MOD-V3
 
-- 💬 **Codes Readability**: If you open the zip file of Disable Flag Secure it's most likely that you will not understand the codes. Simple Flag Secure have improved code readability by comments and less lines of codes (300 vs 2000)
-
-- 🔄 **Backup Services Jar**: Normally if you remove and flash Disable Flag Secure, you need to wait again 2-3 min (depends on RAM and Processor). In Simple version it creates a backup so removing and flashing this again will take less time then before. 
+- ⚙️ **Optimized Module Structure**: Reduced redundancy and cleaned up code for better maintainability.
+- 🚫 **Screenshot Detection Blocked**: Prevents apps from detecting when a screenshot is taken.
+- 🔗 **Improved Support & Compatibility**: Better handling on newer Android versions and different environments.
+- ⚡ **Boosted I/O Performance**: Uses fstrim and similar commands to improve performance during installation.
+- 📱 **OEM Compatibility**: May work on popular OEM skins like Realme UI, ColorOS, HyperOS, and One UI.
 
 > [!NOTE]
 > You can remove the backup if you want by deleting this directory /data/#SFS
@@ -32,9 +38,11 @@ Removing Screenshots Restrictions from Apps is straight-forward. Follow these si
    
 3. **Enjoy**: Done Check by taking screenshots from apps like Whatsapp One Time View Photos.
 
-For any inquiries or support, feel free to contact me on [Telegram](https://telegram.me/ShastikXD).
+For any inquiries or support, feel free to contact me on **[Telegram](https://telegram.me/ShastikXD)**.
 
 ## 🙌 Credits
 
 - **[MehediHJoy](https://xdaforums.com/t/module-disable-flag-secure-v9-0-by-mehedi-h-joy.4490475/)** - Main Idea and source of this module.
 - **[ShirigiriPatil](https://telegram.me/BosadBillaHun)** - For testing module on KSU.
+- **[LazyMeao](https://telegram.me/lazymeao)** - For testing module on Realme UI 2.
+- **[ShishirThakur](https://telegram.me/Shishirsthakur)** - For testing screenshot detection.
