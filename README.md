@@ -28,21 +28,50 @@
 > [!NOTE]
 > You can remove the backup if you want by deleting this directory /data/#SFS
 
-## 🛠️ Installation Guide
+## 📥 Installation Guide
 
-Removing Screenshots Restrictions from Apps is straight-forward. Follow these simple steps:
+🚫📸 Removing screenshot restrictions is simple. Just follow these steps:
 
-1. **Download & Install**: Open Magisk/KSU/APatch Manager, go to the Modules section, tap the '+' icon, and select the Simple Flag Secure Module zip file to install.
-   
-2. **Reboot**: Reboot your device to activate .
-   
-3. **Enjoy**: Done Check by taking screenshots from apps like Whatsapp One Time View Photos.
+1️⃣ **Install Module**: Open Magisk/KSU/APatch Manager → Modules → Tap '+' → Select Simple Flag Secure zip.
 
-For any inquiries or support, feel free to contact me on **[Telegram](https://telegram.me/ShastikXD)**.
+💾 **(Optional)**: Save logs via top-right disk icon — helpful if module doesn't work.
+
+🔁 **Reboot Device**: Restart your device to apply changes.
+
+✅ **Test It**: Try taking screenshots (e.g. WhatsApp profile pic) to confirm it's working.
+
+
+## 🧰 Troubleshooting
+
+🔄 **If bootloop or system doesn't boot**:
+
+1️⃣ Reboot into Recovery (TWRP or other).  
+2️⃣ Go to: `/data/adb/modules/SimpleFlagSecure`  
+3️⃣ Delete the `SimpleFlagSecure` folder.  
+4️⃣ Reboot system and report on **[Telegram](https://telegram.me/ShastikXD)**.
+
+
+🚫 **If the module doesn’t work**:
+
+1️⃣ Copy `services.jar` from `/system/framework/` to internal storage (use root file manager).  
+2️⃣ Send the `services.jar` to **[Telegram](https://telegram.me/ShastikXD)**.  
+3️⃣ Delete `/data/#SFS` from root directory.  
+4️⃣ Reflash the module and **save logs** during install.  
+5️⃣ Send logs from `sdcard/Download/Magisk|KSU|APatch_install_logs` to **[Telegram](https://telegram.me/ShastikXD)**.
+
+📬 **Need help?** Message me anytime on **[Telegram](https://telegram.me/ShastikXD)**.
 
 ## 🙌 Credits
 
-- **[MehediHJoy](https://xdaforums.com/t/module-disable-flag-secure-v9-0-by-mehedi-h-joy.4490475/)** - Main Idea and source of this module.
-- **[ShirigiriPatil](https://telegram.me/BosadBillaHun)** - For testing module on KSU.
-- **[LazyMeao](https://telegram.me/lazymeao)** - For testing module on Realme UI 2.
-- **[ShishirThakur](https://telegram.me/Shishirsthakur)** - For testing screenshot detection.
+💡 **[MehediHJoy](https://xdaforums.com/t/module-disable-flag-secure-v9-0-by-mehedi-h-joy.4490475/)**  
+Idea originator and source reference for this module.
+
+🧪 **[ShirigiriPatil](https://telegram.me/BosadBillaHun)**  
+Tested the module on KernelSU (KSU).
+
+📱 **[LazyMeao](https://telegram.me/lazymeao)**  
+Tested on Realme UI 2.0 for compatibility.
+
+🕵️ **[ShishirThakur](https://telegram.me/Shishirsthakur)**  
+Helped test screenshot detection functionality.
+
