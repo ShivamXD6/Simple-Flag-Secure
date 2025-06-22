@@ -46,6 +46,40 @@ sfs() {
   sleep "$samay"
 }
 
+## Check for volume key
+checkkey() {
+while true; do
+  key_code=$(getevent -qlc 1 | grep "KEY_" | awk '{print $3}')
+  if [ -n "$key_code" ]; then
+    echo "$key_code"
+    sleep 1
+    break
+  fi
+  sleep 0.1
+done
+}
+
+## Handle Options based on key pressed
+opt() {
+while true; do
+  key=$(checkkey)
+  case $key in
+    KEY_VOLUMEUP)
+      return 0
+      ;;
+    KEY_VOLUMEDOWN)
+      return 1
+      ;;
+    KEY_POWER)
+      return 2
+      ;;
+    *)
+      sfs "❌ Invalid Key! Try Again. Key pressed: $key"
+      ;;
+  esac
+done
+}
+
 # Cleanup Function
 clean() {
   rm -rf "$MODPATH/disable.sh"
@@ -61,12 +95,6 @@ setdefault() {
 # Save State
 savestate() {
   setdefault "$1" "$(md5sum "$2")"
-}
-
-# Set Permissions
-set_perm() {
-  chown "$1:$2" "$4"
-  chmod "$3" "$4"
 }
 
 # Function to edit Smali Files
@@ -193,16 +221,27 @@ run_jar() {
     esac
 }
 
+# Clean flash or dirty flash
+sfs "🤔 Do you want to clean install or dirty install?" 1 "h"
+sfs "🔊 Vol+ = Clean Install\n🔉 Vol- = Dirty Install"
+opt
+if [ $? -eq 0 ]; then
+  sfs "🧹 Performing Clean Flash"
+  rm -rf "$DB"
+else
+  sfs "🧼 Performing Dirty Flash"
+fi 
+
 # Check for Backup Dir
-if [ ! -d "$DB/MOD" ]; then
-rm -rf "$DB" # Delete OLD Backup of V2
-mkdir -p "$DB/MOD"
-mkdir -p "$TMPDIR"
+if [ ! -d "$DB/MOD" ] || [ -d "$DB/TMP" ]; then
+  rm -rf "$DB" # Delete OLD Backup of Vwhere 2
+  mkdir -p "$DB/MOD"
+  mkdir -p "$TMPDIR"
 fi
 
 # Function to Run apktool.jar using run_jar
 apktool() {
-    run_jar "$BIN/apktool.jar" --aapt "$BIN/aapt" -p "$TMPDIR" "$@"
+  run_jar "$BIN/apktool.jar" -p "$TMPDIR" "$@"
 }
 
 # Function to find BusyBox binary
@@ -221,21 +260,21 @@ BBOX
 
 # Check for Deodex services.jar
 if ! unzip -l "$STOCK"/services.jar | grep classes.dex >/dev/null; then
-   sfs " ❎ - You need a deodexed services.jar"
-   exit 1
+  sfs " ❎ - You need a deodexed services.jar"
+  exit 1
 fi
 
 # Installation Begin
 sfs "⚡ Simple Flag Secure ⚡" 1 "h"
-sfs "✨ Works with Magisk, KSU & APatch\n✅ Made by @ShastikXD\nℹ️ Version :- MOD-V3"
+sfs "✨ Works with Magisk, KSU & APatch\n✅ Made by @ShastikXD\nℹ️ Version :- MOD-V4"
+sfs "📝 Please Save Installation Logs" 1
 
 # Sync and Drop Caches
 sync
 echo 3 > /proc/sys/vm/drop_caches
-echo 0 > /proc/sys/vm/drop_caches
 
 # Perform fstrim to speed up heavy I/O (helps apktool decompile/recompile faster)
-sfs "🚀 - Trimming blocks for Better I/O Speed" 1 "h"
+sfs "🚀 Trimming blocks for Better I/O Speed" 1 "h"
 for part in /system /data /cache; do
   "$BB" fstrim -v "$part" 2>/dev/null || true
 done
@@ -243,48 +282,45 @@ echo ""
 
 # Check if Module Already used once
 if [ -f "$DB/MOD/services.jar" ]; then
-sfs "💾 - Found a backup! restoring it" 1 "h"
+sfs "💾 Found a backup! restoring it" 1 "h"
 cp -af "$DB/MOD/services.jar" "$MOD/services.jar"
 rm -rf "$DB/TMP"
-sfs "✨ - All done! You can reboot now." 1 "h"
+sfs "✨ All done! You can reboot now." 1 "h"
 else 
-sfs "⚡ - First-time setup may take 2–3 minutes.\n⚡ - Reflashing on the same ROM will be quicker." 1
+sfs "⚡ First-time setup may take 2–3 minutes.\n⚡ Reflashing on the same ROM will be quicker." 1
 cp -af "$STOCK/services.jar" "$DB/services.jar"
 
 # Decompiling with apktool
-sfs " 👾 - Decompiling services.jar" 1 "h"
+sfs " 👾 Decompiling services.jar" 1 "h"
 apktool d -f "$STOCK"/services.jar -o "$TMPDIR/services"
 
 # Apply smali patches
-sfs " 🧩 - Patching Smali Files" 1 "h"
+sfs " 🧩 Patching Smali Files" 1 "h"
 
-# Patch isSecureLocked (Common in Custom ROMs)
-smali_kit -c -m ".method public isSecureLocked" -re "$false" -d "$TMPDIR/services"
+# Method Replacement Map
+declare -A method_map=(
+  ["isSecureLocked"]="$false"
+  ["preventTakingScreenshotToTargetWindow"]="$false"
+  ["notAllowCaptureDisplay"]="$false"
+  ["hasSecureWindowOnScreen"]="$false"
+  ["hasSecure"]="$false"
+  ["canBeScreenshotTarget"]="$true"
+  ["notifyScreenshotListeners"]="$list"
+)
 
-# Patch preventTakingScreenshotToTargetWindow (OLD ROMs)
-smali_kit -c -m ".method public preventTakingScreenshotToTargetWindow" -re "$false" -d "$TMPDIR/services"
-
-# Patch notAllowCaptureDisplay (Xiaomi)
-smali_kit -c -m ".method public notAllowCaptureDisplay" -re "$false" -d "$TMPDIR/services"
-
-# Patch hasSecureWindowOnScreen (Realme)
-smali_kit -c -m ".method hasSecureWindowOnScreen" -re "$false" -d "$TMPDIR/services"
-
-# Patch hasSecure (OnePlus, OPPO, Realme)
-smali_kit -c -m ".method public hasSecure" -re "$false" -d "$TMPDIR/services"
-
-# Patch canBeScreenshotTarget (Samsung OneUI)
-smali_kit -c -m ".method public canBeScreenshotTarget" -re "$true" -d "$TMPDIR/services"
-
-# Patch notifyScreenshotListeners (Screenshot Detection)
-smali_kit -c -m ".method public notifyScreenshotListeners" -re "$list" -d "$TMPDIR/services"
+# Apply patches for each method
+for method in "${!method_map[@]}"; do
+  for prefix in "" "public "; do
+    smali_kit -c -m ".method ${prefix}${method}" -re "${method_map[$method]}" -d "$TMPDIR/services"
+  done
+done
 
 # Recompiling with apktool
-sfs " 👾 - Recompiling services.jar" 1 "h"
+sfs " 👾 Recompiling services.jar" 1 "h"
 apktool b "$TMPDIR/services" -o "$MOD/services.jar" 
 
 # Replace only the modified dex in services.jar
-sfs "🖇️ - Replacing only the modified dex file" 1 "h"
+sfs "🖇️ Replacing only the modified dex file" 1 "h"
 Smali="$(getprop SMALI)"
 cnt=1
 while [[ "$cnt" -lt 20 && ! "$(basename "$Smali")" =~ ^smali(_classes[2-5]?)?$ ]]; do
@@ -305,9 +341,16 @@ if [ "$cnt" -lt 20 ]; then
     unzip -qo "$MOD/services.jar" -d "$TMPDIR/MOD"
     cp -af "$TMPDIR/MOD/$Class" "$TMPDIR/ORG/$Class"
     cd "$TMPDIR/ORG" || exit 1
-    $BIN/zip -qr "$MOD/services.jar" .
+    
+    # Check for Arch for Zip Binary
+    ARCH=$(getprop ro.product.cpu.abi)
+    if [ "$ARCH" = "arm64-v8a" ]; then
+      "$BIN/zip" -qr "$MOD/services.jar" .
+    else
+      "$BIN/zip32" -qr "$MOD/services.jar" .
+    fi
     cp -af "$MOD/services.jar" "$DB/MOD/services.jar"
 fi
 clean
-sfs "✨ - All done! You can reboot now." 1 "h"
+sfs "✨ All done! You can reboot now." 1 "h"
 fi
