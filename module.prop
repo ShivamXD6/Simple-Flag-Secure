@@ -1,6 +1,6 @@
 id=SimpleFlagSecure
 name=SimpleFlagSecure
-version=MOD-V3
-versionCode=30
+version=MOD-V4
+versionCode=40
 author=ShastiKXD
-description=Enables screenshots in restricted apps and supports Magisk, KSU, and APatch.
+description=Simple Flag Secure for taking screenshot from restricted apps supports - Magisk/KSU/Apatch.
