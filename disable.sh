@@ -37,19 +37,18 @@ list='
 
 # Print Function
 sfs() {
-  local sandesh="$1"
-  local samay="${2:-0.5}"
-  local prakar="$3"
-  local rekha=$(( ${#sandesh} + 3 ))
-  [ "$rekha" -gt "60" ] && rekha=60
-  if [ "$prakar" == "h" ]; then
-    echo ""
-    printf '%*s\n' "$rekha" | tr ' ' '='
-    echo " $sandesh"
-    printf '%*s\n' "$rekha" | tr ' ' '='
-  else
+  orgsandesh="$1"; samay="${2:-0.2}"; prakar="${3}"
+  [[ "$2" == h* ]] && prakar="${2}" && samay="${3:-0.2}"
+  echo "$orgsandesh" | grep -q '[^ -~]' && sandesh=" $orgsandesh" || sandesh=" $orgsandesh "
+  rekha=$(printf "%s\n" "$sandesh" | awk '{ print length }' | sort -nr | head -n1)
+  [ "$rekha" -gt 50 ] && rekha=50
+  akshar=(= - ~ '*' + '<' '>')
+  [[ "$prakar" == h* ]] && {
+    shabd="${prakar#h}"; [ -z "$shabd" ] && shabd="${akshar[RANDOM % ${#akshar[@]}]}"
+    echo; printf '%*s\n' "$rekha" '' | tr ' ' "$shabd"
     echo -e "$sandesh"
-  fi 
+    printf '%*s\n' "$rekha" '' | tr ' ' "$shabd"
+  } || echo -e "$orgsandesh"
   sleep "$samay"
 }
 
