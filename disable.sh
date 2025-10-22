@@ -245,11 +245,16 @@ declare -A method_map=(
 )
 
 # Apply patches for each method
+ram=$(grep MemAvailable /proc/meminfo | awk '{print $2}'); jobs=$(( (${ram:-0}/1024 + 50) / 100 )); [ "$jobs" -le 0 ] && jobs=5
 for method in "${!method_map[@]}"; do
   for prefix in "" "public "; do
-    smali_kit -c -m ".method ${prefix}${method}" -re "${method_map[$method]}" -d "$TMPDIR/services"
+    smali_kit -c -m ".method ${prefix}${method}" -re "${method_map[$method]}" -d "$TMPDIR/services" &
+  done
+  while [ "$(jobs -rp | wc -l)" -gt "$jobs" ]; do
+    sleep 0.2
   done
 done
+wait
 
 # Recompiling with apktool
 sfs " 👾 Recompiling services.jar" 1 "h"
