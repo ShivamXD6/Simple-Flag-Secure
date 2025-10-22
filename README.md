@@ -12,7 +12,7 @@
 - 💾 **Lightweight**: No bloated binaries or extras — faster and minimal than MehediHJoy's version.
 - ⭐ **Root Managers Support**: Fully compatible with Magisk, KernelSU, APatch and their forks, unlike the outdated original.
 - 🖥️ **Dex-Only Patch**: Only modifies required DEX files, avoiding issues like broken power button on Android 14.
-- 💬 **Readable Code**: Clean, commented code with fewer lines (300 vs 2000), easy to understand.
+- 💬 **Readable Code**: Clean, commented code with fewer lines (< 300 vs 2000), easy to understand.
 - 🔄 **Fast Restore**: Creates backup of services.jar for quicker reflash after removal.
 - ⚙️ **Optimized Module Structure**: Reduced redundancy and cleaned up code for better maintainability.
 - 🚫 **Screenshot Detection Blocked**: Prevents apps from detecting when a screenshot is taken.

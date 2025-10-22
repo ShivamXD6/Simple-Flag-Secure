@@ -5,6 +5,7 @@ STOCK="/system/framework"
 MOD="$MODPATH/system/framework"
 DB="/data/#SFS"
 TMPDIR="$DB/TMP"
+ARCH=$(getprop ro.product.cpu.abi)
 
 # Patch Bodies for Methods
 true='
@@ -25,6 +26,12 @@ list='
     invoke-direct {v0}, Ljava/util/ArrayList;-><init>()V
     return-object v0
 '
+
+# Only 64-Bit Supported
+[[ "$ARCH" =~ arm64-v8a ]] || {
+  DEKH "🧨 This module requires a 64-bit environment. Exiting..."
+  exit 1
+}
 
 ## Functions
 
@@ -341,14 +348,7 @@ if [ "$cnt" -lt 20 ]; then
     unzip -qo "$MOD/services.jar" -d "$TMPDIR/MOD"
     cp -af "$TMPDIR/MOD/$Class" "$TMPDIR/ORG/$Class"
     cd "$TMPDIR/ORG" || exit 1
-    
-    # Check for Arch for Zip Binary
-    ARCH=$(getprop ro.product.cpu.abi)
-    if [ "$ARCH" = "arm64-v8a" ]; then
-      "$BIN/zip" -qr "$MOD/services.jar" .
-    else
-      "$BIN/zip32" -qr "$MOD/services.jar" .
-    fi
+    "$BIN/zip" -qr "$MOD/services.jar" .
     cp -af "$MOD/services.jar" "$DB/MOD/services.jar"
 fi
 clean
