@@ -256,9 +256,13 @@ for method in "${!method_map[@]}"; do
 done
 wait
 
+# Delete Unnecessary folders and files
+find "$TMPDIR/services" -mindepth 1 -maxdepth 1 -type d -exec sh -c '[ ! -f "$1/patched" ] && rm -rf "$1"' _ {} \;
+rm -f "$TMPDIR/services"/*/patched
+
 # Recompiling with apktool
-sfs " 👾 Recompiling services.jar" 1 "h"
-apktool b "$TMPDIR/services" -o "$MOD/services.jar" 
+sfs " 👾 Recompiling services.jar" "h"
+apktool b -f "$TMPDIR/services" -o "$TMPDIR/services.jar"
 
 # Replace only the modified dex in services.jar
 sfs "🖇️ Replacing only the modified dex file" 1 "h"
