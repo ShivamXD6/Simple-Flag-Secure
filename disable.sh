@@ -213,17 +213,6 @@ if ! unzip -l "$STOCK"/services.jar | grep classes.dex >/dev/null; then
   exit 1
 fi
 
-# Sync and Drop Caches
-sync
-echo 3 > /proc/sys/vm/drop_caches
-
-# Perform fstrim to speed up heavy I/O (helps apktool decompile/recompile faster)
-sfs "🚀 Trimming blocks for Better I/O Speed" 1 "h"
-for part in /system /data /cache; do
-  "$BB" fstrim -v "$part" 2>/dev/null || true
-done
-echo ""
-
 # Check if Module Already used once
 if [ -f "$DB/MOD/services.jar" ]; then
 sfs "💾 Found a backup! restoring it" 1 "h"
