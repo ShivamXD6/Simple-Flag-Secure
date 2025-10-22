@@ -99,98 +99,65 @@ clean() {
   rm -rf "$DB"/TMP
 }
 
-# Set Default value
-setdefault() {
-  read -r -d '' "$1" <<< "$2"
-}
-
-# Save State
-savestate() {
-  setdefault "$1" "$(md5sum "$2")"
-}
-
 # Function to edit Smali Files
 smali_kit() {
-   # Smali Toolkit for Dynamic Installer by BlassGO (Optimized by ShastikXD)
-   local count=0 restore=() check file path method replace rim newline oldline dim dim_oldline remake al al_add bl bl_add staticname smaliname limit
+   local count=0 check file path method replace rim newline oldline dim dim_oldline remake al al_add bl bl_add staticname smaliname limit
    while [[ $# -gt 0 ]]; do
       case $1 in
-         -f|-file) file="$2"; shift 2;;
-         -d|-dir) path="$2"; shift 2;;
-         -m|-method) method="$2"; shift 2;;
-         -r|-replace) replace="$2"; shift 2;;
-         -rim|-replace-in-method) rim=1; oldline="$2"; newline="$3"; shift 3;;
-         -dim|-delete-in-method) dim=1; dim_oldline="$2"; shift 2;;
-         -re|-remake) remake="$2"; shift 2;;
-         -al|-after-line) al="$2"; al_add="$3"; shift 3;;
-         -bl|-before-line) bl="$2"; bl_add="$3"; shift 3;;
+         -f|-file) file=$2; shift 2;;
+         -d|-dir) path=$2; shift 2;;
+         -m|-method) method=$2; shift 2;;
+         -r|-replace) replace=$2; shift 2;;
+         -rim|-replace-in-method) rim=1; oldline=$2; newline=$3; shift 3;;
+         -dim|-delete-in-method) dim=1; dim_oldline=$2; shift 2;;
+         -re|-remake) remake=$2; shift 2;;
+         -al|-after-line) al=$2; al_add=$3; shift 3;;
+         -bl|-before-line) bl=$2; bl_add=$3; shift 3;;
          -c|-check) check=1; shift;;
-         -n|-name) smaliname="$2"; shift 2;;
-         -sn|-static-name) staticname="$2"; shift 2;;
-         -l|-limit) limit="$2"; shift 2;;
-         *) restore+=("$1"); shift;;
+         -n|-name) smaliname=$2; shift 2;;
+         -sn|-static-name) staticname=$2; shift 2;;
+         -l|-limit) limit=$2; shift 2;;
       esac
    done
-   set -- "${restore[@]}"
    local targets
-   if [[ -n "$path" && -n "$method" ]]; then
-      targets=$(grep -rl --include="*.smali" "$method" "$path")
-   elif [[ -n "$file" && -n "$method" ]]; then
-      targets="$file"
+   if [[ -n $path && -n $method ]]; then
+      mapfile -t targets < <(grep -rl --include="*.smali" "$method" "$path")
+   elif [[ -n $file && -n $method ]]; then
+      targets=("$file")
    else
-      echo " smali_kit: Invalid line " && return
+      echo "smali_kit: Invalid line"
+      return 1
    fi
-   for dir in $targets; do
-      local base=$(basename "$dir")
-      [[ -n "$staticname" && "$base" != "$staticname" ]] && continue
-      [[ -n "$smaliname" && "$base" != *"$smaliname"* ]] && continue
-      while IFS= read -r huh; do
-         local line liner old try load stock edit get
-         local num=$(echo "$huh" | cut -f1 -d:)
-         liner=$(echo "$huh" | cut -f2- -d:)
-
-         [[ "$liner" != *".method"* ]] && continue
-         line=$(echo "$liner" | sed -e 's/[]\/$*.^[]/\\&/g')
-         savestate stock "$dir"
-         [[ -z "$replace" && -z "$rim" && -z "$remake" && -z "$al" && -z "$bl" && -z "$dim" ]] && {
+   for dir in "${targets[@]}"; do
+      local base=${dir##*/}
+      [[ -n $staticname && $base != "$staticname" ]] && continue
+      [[ -n $smaliname && $base != *"$smaliname"* ]] && continue
+      grep -nw "$method" "$dir" | while IFS=: read -r num liner; do
+         [[ $liner != *".method"* ]] && continue
+         local line old try load stock edit
+         line=$(sed -e 's/[]\/$*.^[]/\\&/g' <<<"$liner")
+         if [[ -z $replace && -z $rim && -z $remake && -z $al && -z $bl && -z $dim ]]; then
             echo "path=$dir"
             sed -n "/$line/,/\.end method/p" "$dir"
             continue
-         }
-         load=$(cat "$dir")
+         fi
+         load=$(<"$dir")
          old=$(sed -n "/$line/,/\.end method/p" "$dir")
-         try="$old"
-         [[ -n "$replace" ]] && try="$replace"
-         [[ -n "$rim" && -n "$oldline" && -n "$newline" ]] && try=$(echo "$old" | sed "s|$oldline|$newline|")
-         [[ -n "$dim" && -n "$dim_oldline" ]] && try=$(echo "$old" | sed "/$dim_oldline/d")
-         if [[ -n "$remake" ]]; then
-            echo "$liner" > "$DB/re.tmp"
-            echo "$remake" >> "$DB/re.tmp"
-            echo ".end method" >> "$DB/re.tmp"
-            try=$(cat "$DB/re.tmp")
-            rm -f "$DB/re.tmp"
-         fi
-         if [[ -n "$bl" && -n "$bl_add" ]]; then
-            echo "$bl_add" > "$DB/bl.tmp"
-            get=$(sed '$!s/$/\\/' "$DB/bl.tmp")
-            rm -f "$DB/bl.tmp"
-            try=$(echo "$old" | sed "/$bl/i $get")
-         fi
-         if [[ -n "$al" && -n "$al_add" ]]; then
-            echo "$al_add" > "$DB/al.tmp"
-            get=$(sed '$!s/$/\\/' "$DB/al.tmp")
-            rm -f "$DB/al.tmp"
-            try=$(echo "$old" | sed "/$al/a $get")
-         fi
-         echo "${load/$old/$try}" > "$dir"
-         savestate edit "$dir"
+         try=$old
+         [[ -n $replace ]] && try=$replace
+         [[ -n $rim && -n $oldline && -n $newline ]] && try=$(sed "s|$oldline|$newline|" <<<"$old")
+         [[ -n $dim && -n $dim_oldline ]] && try=$(sed "/$dim_oldline/d" <<<"$old")
+         [[ -n $remake ]] && try="$liner"$'\n'"$remake"$'\n'".end method"
+         [[ -n $bl && -n $bl_add ]] && try=$(sed "/$bl/i $bl_add" <<<"$old")
+         [[ -n $al && -n $al_add ]] && try=$(sed "/$al/a $al_add" <<<"$old")
+         printf '%s' "${load/$old/$try}" > "$dir"
          ((count++))
-         [[ -n "$check" ]] && {
-            [[ "$edit" != "$stock" ]] && sfs "🧩 - Patched: $remake\n📁 - In: $dir" && echo ""
-         }
-         setprop SMALI "$dir"
-         [[ -n "$limit" && "$limit" -eq "$count" ]] && break
-      done <<< "$(grep -nw "$method" "$dir")"
+         if [[ -n $check ]]; then
+            sfs "\n🧩 Patched: $liner\n🛠️ With: $remake📁 In: $dir\n"
+            [ ! -f "${dir%%/com/android/*}/patched" ] && touch "${dir%%/com/android/*}/patched"
+         fi
+         [[ -n $limit && $limit -eq $count ]] && break 2
+      done
    done
 }
 
