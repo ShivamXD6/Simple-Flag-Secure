@@ -161,45 +161,6 @@ smali_kit() {
    done
 }
 
-# Function to run JAR files
-run_jar() {
-    local file main
-    if command -v dalvikvm >/dev/null 2>&1; then
-        VM=dalvikvm
-        VM_TYPE=dalvik
-    elif [ -x /system/bin/dalvikvm ]; then
-        VM=/system/bin/dalvikvm
-        VM_TYPE=dalvik
-    elif command -v app_process >/dev/null 2>&1; then
-        VM=app_process
-        VM_TYPE=app_process
-    elif [ -x /system/bin/app_process ]; then
-        VM=/system/bin/app_process
-        VM_TYPE=app_process
-    else
-        sfs "❌ Cannot find dalvikvm or app_process"
-        return 1
-    fi
-    file="$1"
-    shift
-    unzip -p "$file" META-INF/MANIFEST.MF | grep -m1 "^Main-Class:" | cut -d: -f2 | tr -d ' \r' > /data/main.tmp
-    main=$(cat /data/main.tmp)
-    rm -f /data/main.tmp
-    if [ -z "$main" ]; then
-        sfs "❌ Could not find Main-Class in $file"
-        return 1
-    fi
-    case "$VM_TYPE" in
-        dalvik)
-            "$VM" -Djava.io.tmpdir=. -Xnodex2oat -Xnoimage-dex2oat -cp "$file" "$main" "$@" 2>/dev/null \
-            || "$VM" -Djava.io.tmpdir=. -Xnoimage-dex2oat -cp "$file" "$main" "$@"
-            ;;
-        app_process)
-            "$VM" /system/bin "$main" "$@"
-            ;;
-    esac
-}
-
 # Module Info UI
 sfs "👀 $(padh "name" "$MODPATH/module.prop")" "h#" 1
 sfs "🌟 Made By $(padh "author" "$MODPATH/module.prop")"
@@ -226,9 +187,11 @@ if [ ! -d "$DB/MOD" ] || [ -d "$DB/TMP" ]; then
   mkdir -p "$TMPDIR"
 fi
 
-# Function to Run apktool.jar using run_jar
+# Function to Run apktool.jar using dalvikvm
+ram=$(grep MemAvailable /proc/meminfo | awk '{print $2}'); heap=$(( (${ram:-512} * 2 / 3) / 1024 )); [ "$heap" -gt 2048 ] && heap=2048
 apktool() {
   run_jar "$BIN/apktool.jar" -p "$TMPDIR" "$@"
+  dalvikvm -Xmx${heap}m -cp "$BIN/apktool.jar" brut.apktool.Main -p "$TMPDIR" "$@"
 }
 
 # Function to find BusyBox binary
