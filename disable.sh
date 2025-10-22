@@ -86,6 +86,12 @@ while true; do
 done
 }
 
+# Read Files
+padh() {
+  value=$(grep -m 1 "^$1=" "$2" | sed 's/^.*=//')
+  echo "${value//[[:space:]]/ }"
+}
+
 # Cleanup Function
 clean() {
   rm -rf "$MODPATH/disable.sh"
@@ -227,6 +233,14 @@ run_jar() {
     esac
 }
 
+# Module Info UI
+sfs "👀 $(padh "name" "$MODPATH/module.prop")" "h#" 1
+sfs "🌟 Made By $(padh "author" "$MODPATH/module.prop")"
+sfs "⚡ Version - $(padh "version" "$MODPATH/module.prop")"
+sfs "💻 Architecture - $ARCH"
+sfs "📝 $(padh "description" "$MODPATH/module.prop")"
+sfs "📝 Please Save Installation Logs" "h*"
+
 # Clean flash or dirty flash
 sfs "🤔 Do you want to clean install or dirty install?" 1 "h"
 sfs "🔊 Vol+ = Clean Install\n🔉 Vol- = Dirty Install"
@@ -269,11 +283,6 @@ if ! unzip -l "$STOCK"/services.jar | grep classes.dex >/dev/null; then
   sfs " ❎ - You need a deodexed services.jar"
   exit 1
 fi
-
-# Installation Begin
-sfs "⚡ Simple Flag Secure ⚡" 1 "h"
-sfs "✨ Works with Magisk, KSU & APatch\n✅ Made by @ShastikXD\nℹ️ Version :- MOD-V4"
-sfs "📝 Please Save Installation Logs" 1
 
 # Sync and Drop Caches
 sync
