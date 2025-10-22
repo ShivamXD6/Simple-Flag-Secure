@@ -190,7 +190,6 @@ fi
 # Function to Run apktool.jar using dalvikvm
 ram=$(grep MemAvailable /proc/meminfo | awk '{print $2}'); heap=$(( (${ram:-512} * 2 / 3) / 1024 )); [ "$heap" -gt 2048 ] && heap=2048
 apktool() {
-  run_jar "$BIN/apktool.jar" -p "$TMPDIR" "$@"
   dalvikvm -Xmx${heap}m -cp "$BIN/apktool.jar" brut.apktool.Main -p "$TMPDIR" "$@"
 }
 
@@ -251,6 +250,9 @@ declare -A method_map=(
   ["hasSecure"]="$false"
   ["canBeScreenshotTarget"]="$true"
   ["notifyScreenshotListeners"]="$list"
+  ["isAllowAudioPlaybackCapture"]="$true"
+  ["isScreenCaptureAllowed"]="$true"
+  ["getScreenCaptureDisabled"]="$false"
 )
 
 # Apply patches for each method
