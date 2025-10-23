@@ -4,7 +4,7 @@
 ![Downloads](https://img.shields.io/github/downloads/ShivamXD6/Simple-Flag-Secure/total?color=green&style=for-the-badge)
 ![Release](https://img.shields.io/github/v/release/ShivamXD6/Simple-Flag-Secure?style=for-the-badge)
 [![Join Build Bytes](https://img.shields.io/badge/Join-Build%20Bytes-2CA5E0?style=for-the-badge&logo=telegram)](https://telegram.me/BuildBytes)
-[![Join Chat](https://img.shields.io/badge/Join%20Chat-Build%20Bytes%20Discussion-2CA5E0?style=for-the-badge&logo=telegram)](https://telegram.me/BuildBytesChat)
+[![Join Chat](https://img.shields.io/badge/Join%20Chat-Build%20Bytes%20Discussion-2CA5E0?style=for-the-badge&logo=telegram)](https://telegram.me/BuildBytesDiscussion)
 ![Android](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white)
 ![Root](https://img.shields.io/badge/Root-ff0000?style=for-the-badge&logo=superuser&logoColor=white)
 ![Magisk](https://img.shields.io/badge/Magisk-8A2BE2?style=for-the-badge&logo=magisk&logoColor=white)
@@ -46,16 +46,16 @@
 1️. Reboot into Recovery (TWRP or other).  
 2️. Go to: `/data/adb/modules/simple_flag_secure`  
 3️. Delete the `simple_flag_secure` folder.  
-4️. Reboot system and report on **[Telegram](https://telegram.me/BuildBytesChat)**.
+4️. Reboot system and report on **[Telegram](https://telegram.me/BuildBytesDiscussion)**.
 
 
 🚫 **If the module doesn’t work**:
 
 1️. Copy `services.jar` from `/system/framework/` to internal storage (use root file manager).  
-2️. Send the `services.jar` to **[Telegram](https://telegram.me/BuildBytesChat)**.  
+2️. Send the `services.jar` to **[Telegram](https://telegram.me/BuildBytesDiscussion)**.  
 3️. Delete `/data/#SFS` from root directory.  
 4️. Reflash the module and **save logs** during install.  
-5️. Send logs from `sdcard/Download/Magisk|KSU|APatch_install_logs` to **[Telegram](https://telegram.me/BuildBytesChat)**.
+5️. Send logs from `sdcard/Download/Magisk|KSU|APatch_install_logs` to **[Telegram](https://telegram.me/BuildBytesDiscussion)**.
 
 ## 🙏 Support & Donations
 
