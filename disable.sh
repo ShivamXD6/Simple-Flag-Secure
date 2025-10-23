@@ -159,6 +159,100 @@ smali_kit() {
    done
 }
 
+# Function to Run apktool.jar using dalvikvm
+apktool() {
+  dalvikvm -Xmx512m -cp "$BIN/apktool.jar" brut.apktool.Main -p "$TMPDIR" "$@"
+}
+
+# Patch jar Files
+patch_jar() {
+  local jar_path="$1"
+  declare -n patch_map="$2"  
+  declare -A services_patch=(
+   ["isSecureLocked"]="$false"
+   ["isSecureWindow"]="$false"
+   ["notAllowCaptureDisplay"]="$false"
+   ["hasSecureWindowOnScreen"]="$false"
+   ["hasSecure"]="$false"
+   ["canBeScreenshotTarget"]="$true"
+   ["notifyScreenshotListeners"]="$list"
+   ["isAllowAudioPlaybackCapture"]="$true"
+   ["isScreenCaptureAllowed"]="$true"
+   ["getScreenCaptureDisabled"]="$false"
+   ["containsSecureLayers"]="$false"
+   ["dumpWindowsForScreenShot"]="$true"
+  )
+  declare -A oneui_patch=(
+   ["isSecureLocked"]="$false"
+   ["canBeScreenshotTarget"]="$true"
+  )
+  declare -A hyperos_patch=(
+   ["notAllowCaptureDisplay"]="$false"
+   ["containsSecureLayers"]="$false"
+  )
+  declare -A oplus_patch=(
+   ["hasSecure"]="$false"
+   ["isSecureWindow"]="$false"
+   ["dumpWindowsForScreenShot"]="$true"
+  )
+  local jar_name="${jar_path##*/}"
+  local jar_base="${jar_name%.*}"  
+  cp -af "$jar_path" "$DB/$jar_name"
+  if ! unzip -l "$jar_path" | grep -q classes.dex; then
+    sfs "❌ You need a deodexed $jar_name" "hx"
+    return 1
+  fi
+  sfs " 👾 Decompiling $jar_name" "h"
+  apktool d -f "$jar_path" -o "$TMPDIR/services" || return 1
+  sfs " 🧩 Patching Smali Files" "h"
+  local method prefix
+  for method in "${!patch_map[@]}"; do
+    for prefix in "" "public "; do
+      smali_kit -c -m ".method ${prefix}${method}" -re "${patch_map[$method]}" -d "$TMPDIR/services" &
+    done
+    while [ "$(jobs -rp | wc -l)" -gt 7 ]; do sleep 0.2; done
+  done; wait
+  find "$TMPDIR/services" -mindepth 1 -maxdepth 1 -type d ! -name "unknown" ! -name "original" -exec sh -c '[ ! -f "$1/patched" ] && rm -rf "$1"' _ {} \;
+  rm -f "$TMPDIR/services"/*/patched
+  sfs " 👾 Recompiling $jar_name" "h"
+  apktool b -f "$TMPDIR/services" -o "$TMPDIR/services.jar" || return 1
+  sfs "🖇️ Replacing only the modified dex file" "h"
+  rm -rf "$TMPDIR/ORG" "$TMPDIR/MOD"
+  mkdir -p "$TMPDIR/ORG" "$TMPDIR/MOD" "$DB/MOD"
+  unzip -qo "$jar_path" -d "$TMPDIR/ORG"
+  cp -af "$TMPDIR/services/build/apk"/*.dex "$TMPDIR/ORG"
+  cd "$TMPDIR/ORG"
+  "$BIN/zip" -qr "$MOD/$jar_name" .
+  cp -af "$MOD/$jar_name" "$DB/MOD/$jar_name"
+  rm -rf "$TMPDIR/services"
+  return 0
+}
+
+# Run apktool.jar in different Sessions to avoid Segmentation fault
+run() {
+  local jar="$1"
+  local patch="$2"
+  export MODPATH BIN STOCK MOD DB TMPDIR ARCH true false list
+  export -f sfs smali_kit patch_jar apktool
+  "$BIN/bash" -c "patch_jar \"$jar\" \"$patch\"" || {
+    sfs "💥 Dalvik crashed while patching $jar"
+    return 1
+  }
+}
+
+# Check for OEM services.jar and patch it
+check_and_patch() {
+  local jar_path="$1"
+  local label="$2"
+  local patch_map="$3"
+  if [ -f "$jar_path" ]; then
+    sfs "🔍 $label detected" "h"
+    sfs "⏳ Patching may work better but takes time.\n⚡ Skipping is faster but might fail if screenshot blocking exists."
+    sfs "🔊 Vol+ = Patch It\n🔉 Vol- = Skip It"; opt
+    [ $? -eq 0 ] && run "$jar_path" "$patch_map"
+  fi
+}
+
 # Module Info UI
 sfs "👀 $(padh "name" "$MODPATH/module.prop")" "h#" 1
 sfs "🌟 Made By $(padh "author" "$MODPATH/module.prop")"
@@ -170,8 +264,7 @@ sfs "📝 Please Save Installation Logs" "h*"
 # Clean flash or dirty flash
 [ -f "$DB/MOD/services.jar" ] && {
 sfs "🤔 Do you want to clean install or dirty install?" 1 "h"
-sfs "🔊 Vol+ = Clean Install (Recompile again - slower)\n🔉 Vol- = Dirty Install (Reuse existing - faster)"
-opt
+sfs "🔊 Vol+ = Clean Install (Recompile again - slower)\n🔉 Vol- = Dirty Install (Reuse existing - faster)"; opt
 if [ $? -eq 0 ]; then
   sfs "🧹 Performing Clean Flash"
   rm -rf "$DB" && mkdir -p "$DB"
@@ -180,80 +273,15 @@ else
 fi 
 }
 
-# Function to Run apktool.jar using dalvikvm
-ram=$(grep MemAvailable /proc/meminfo | awk '{print $2}'); heap=$(( (${ram:-512} * 2 / 3) / 1024 )); [ "$heap" -gt 2048 ] && heap=2048
-apktool() {
-  dalvikvm -Xmx${heap}m -cp "$BIN/apktool.jar" brut.apktool.Main -p "$TMPDIR" "$@"
-}
+# Start Patching jars
+run "$STOCK/services.jar" services_patch || exit 1
+check_and_patch "/system/framework/semwifi-service.jar" "OneUI" "oneui_patch"
+check_and_patch "/system_ext/framework/miui-services.jar" "MIUI / HyperOS" "hyperos_patch"
+check_and_patch "/system/framework/oplus-services.jar" "Oplus (RealmeUI/ColorOS/OxygenOS)" "oplus_patch"
 
-# Check for Deodex services.jar
-if ! unzip -l "$STOCK"/services.jar | grep classes.dex >/dev/null; then
-  sfs "❌ You need a deodexed services.jar"
-  exit 1
-fi
-
-# Check if Module Already used once
-if [ -f "$DB/MOD/services.jar" ]; then
-  sfs "💾 Found a backup! restoring it" "h"
-  cp -af "$DB/MOD/services.jar" "$MOD/services.jar"
-else 
-  sfs "⚡ First-time setup may take 2–3 minutes.\n⚡ Reflashing on the same ROM will be quicker."
-  cp -af "$STOCK/services.jar" "$DB/services.jar"
-
-# Decompiling with apktool
-sfs " 👾 Decompiling services.jar" "h"
-apktool d "$STOCK/services.jar" -o "$TMPDIR/services"
-
-# Apply smali patches
-sfs " 🧩 Patching Smali Files" "h"
-
-# Method Replacement Map
-declare -A method_map=(
-  ["isSecureLocked"]="$false"
-  ["preventTakingScreenshotToTargetWindow"]="$false"
-  ["notAllowCaptureDisplay"]="$false"
-  ["hasSecureWindowOnScreen"]="$false"
-  ["hasSecure"]="$false"
-  ["canBeScreenshotTarget"]="$true"
-  ["notifyScreenshotListeners"]="$list"
-  ["isAllowAudioPlaybackCapture"]="$true"
-  ["isScreenCaptureAllowed"]="$true"
-  ["getScreenCaptureDisabled"]="$false"
-)
-
-# Apply patches for each method
-ram=$(grep MemAvailable /proc/meminfo | awk '{print $2}'); jobs=$(( (${ram:-0}/1024 + 50) / 100 )); [ "$jobs" -le 0 ] && jobs=5
-for method in "${!method_map[@]}"; do
-  for prefix in "" "public "; do
-    smali_kit -c -m ".method ${prefix}${method}" -re "${method_map[$method]}" -d "$TMPDIR/services" &
-  done
-  while [ "$(jobs -rp | wc -l)" -gt "$jobs" ]; do
-    sleep 0.2
-  done
-done
-wait
-
-# Delete Unnecessary folders and files
-find "$TMPDIR/services" -mindepth 1 -maxdepth 1 -type d -exec sh -c '[ ! -f "$1/patched" ] && rm -rf "$1"' _ {} \;
-rm -f "$TMPDIR/services"/*/patched
-
-# Recompiling with apktool
-sfs " 👾 Recompiling services.jar" "h"
-apktool b -f "$TMPDIR/services" -o "$TMPDIR/services.jar"
-
-# Replace only the modified dex in services.jar
-sfs "🖇️ Replacing only the modified dex file" "h"
-mkdir -p "$TMPDIR/ORG" "$TMPDIR/MOD" "$DB/MOD"
-unzip -qo "$STOCK/services.jar" -d "$TMPDIR/ORG"
-cp -af "$TMPDIR/services/build/apk"/*.dex "$TMPDIR/ORG"
-cd "$TMPDIR/ORG"
-"$BIN/zip" -qr "$MOD/services.jar" .
-cp -af "$MOD/services.jar" "$DB/MOD/services.jar"
-fi
-
+# Prompt to join the channel if liked :)
 sfs "🔗 @BuildBytes is quietly building things worth exploring. Want to be there early?" "h#"
-sfs "🔊 Vol+ = Yes, I’m in. early, curious, and ahead\n🔉 Vol- = No, I’ll scroll past and miss it\n"
-opt
+sfs "🔊 Vol+ = Yes, I’m in. early, curious, and ahead\n🔉 Vol- = No, I’ll scroll past and miss it\n"; opt
 if [ $? -ne 1 ]; then
   am start -a android.intent.action.VIEW -d https://telegram.me/BuildBytes >/dev/null 2>&1
 else

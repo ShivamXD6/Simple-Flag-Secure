@@ -3,4 +3,4 @@ name=Simple Flag Secure
 version=v5
 versionCode=50
 author=@BuildBytes
-description=Simple Flag Secure lets you take screenshots in apps that normally block them, and hides detection. Works with Magisk, KernelSU, and Apatch.
+description=Simple Flag Secure lets you take screenshots in apps that normally block them, and hides screenshot detection (A14+). Works with Magisk, KernelSU, and Apatch.
