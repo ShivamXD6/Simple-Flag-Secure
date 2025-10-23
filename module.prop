@@ -1,6 +1,6 @@
-id=SimpleFlagSecure
-name=SimpleFlagSecure
-version=MOD-V4
-versionCode=40
-author=ShastiKXD
-description=Simple Flag Secure for taking screenshot from restricted apps supports - Magisk/KSU/Apatch.
+id=simple_flag_secure
+name=Simple Flag Secure
+version=v5
+versionCode=50
+author=@BuildBytes
+description=Simple Flag Secure lets you take screenshots in apps that normally block them, and hides detection. Works with Magisk, KernelSU, and Apatch.

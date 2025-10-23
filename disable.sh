@@ -1,4 +1,4 @@
-## Variables
+# Variables & Functions
 MODPATH="${0%/*}"
 BIN="$MODPATH/system/bin"
 STOCK="/system/framework"
@@ -33,8 +33,6 @@ list='
   exit 1
 }
 
-## Functions
-
 # Print Function
 sfs() {
   orgsandesh="$1"; samay="${2:-0.2}"; prakar="${3}"
@@ -52,7 +50,7 @@ sfs() {
   sleep "$samay"
 }
 
-## Check for volume key
+# Check for volume key
 checkkey() {
 while true; do
   key_code=$(getevent -qlc 1 | grep "KEY_" | awk '{print $3}')
@@ -65,7 +63,7 @@ while true; do
 done
 }
 
-## Handle Options based on key pressed
+# Handle Options based on key pressed
 opt() {
 while true; do
   key=$(checkkey)
@@ -94,9 +92,9 @@ padh() {
 
 # Cleanup Function
 clean() {
-  rm -rf "$MODPATH/disable.sh"
+  rm -f "$MODPATH/disable.sh"
   rm -rf "$BIN"
-  rm -rf "$DB"/TMP
+  rm -rf "$DB/TMP"
 }
 
 # Function to edit Smali Files
@@ -170,22 +168,17 @@ sfs "📝 $(padh "description" "$MODPATH/module.prop")"
 sfs "📝 Please Save Installation Logs" "h*"
 
 # Clean flash or dirty flash
+[ -f "$DB/MOD/services.jar" ] && {
 sfs "🤔 Do you want to clean install or dirty install?" 1 "h"
-sfs "🔊 Vol+ = Clean Install\n🔉 Vol- = Dirty Install"
+sfs "🔊 Vol+ = Clean Install (Recompile again - slower)\n🔉 Vol- = Dirty Install (Reuse existing - faster)"
 opt
 if [ $? -eq 0 ]; then
   sfs "🧹 Performing Clean Flash"
-  rm -rf "$DB"
+  rm -rf "$DB" && mkdir -p "$DB"
 else
   sfs "🧼 Performing Dirty Flash"
 fi 
-
-# Check for Backup Dir
-if [ ! -d "$DB/MOD" ] || [ -d "$DB/TMP" ]; then
-  rm -rf "$DB" # Delete OLD Backup of Vwhere 2
-  mkdir -p "$DB/MOD"
-  mkdir -p "$TMPDIR"
-fi
+}
 
 # Function to Run apktool.jar using dalvikvm
 ram=$(grep MemAvailable /proc/meminfo | awk '{print $2}'); heap=$(( (${ram:-512} * 2 / 3) / 1024 )); [ "$heap" -gt 2048 ] && heap=2048
@@ -193,42 +186,26 @@ apktool() {
   dalvikvm -Xmx${heap}m -cp "$BIN/apktool.jar" brut.apktool.Main -p "$TMPDIR" "$@"
 }
 
-# Function to find BusyBox binary
-BBOX() {
-  [ -n "$BUSYBOX" ] && return 0
-  local path
-  for path in /data/adb/modules/busybox-ndk/system/*/busybox /data/adb/magisk/busybox /data/adb/ksu/bin/busybox /data/adb/ap/bin/busybox; do
-    if [ -f "$path" ]; then
-      export BB="$path"
-      return 0
-    fi
-  done
-  return 1
-}
-BBOX
-
 # Check for Deodex services.jar
 if ! unzip -l "$STOCK"/services.jar | grep classes.dex >/dev/null; then
-  sfs " ❎ - You need a deodexed services.jar"
+  sfs "❌ You need a deodexed services.jar"
   exit 1
 fi
 
 # Check if Module Already used once
 if [ -f "$DB/MOD/services.jar" ]; then
-sfs "💾 Found a backup! restoring it" 1 "h"
-cp -af "$DB/MOD/services.jar" "$MOD/services.jar"
-rm -rf "$DB/TMP"
-sfs "✨ All done! You can reboot now." 1 "h"
+  sfs "💾 Found a backup! restoring it" "h"
+  cp -af "$DB/MOD/services.jar" "$MOD/services.jar"
 else 
-sfs "⚡ First-time setup may take 2–3 minutes.\n⚡ Reflashing on the same ROM will be quicker." 1
-cp -af "$STOCK/services.jar" "$DB/services.jar"
+  sfs "⚡ First-time setup may take 2–3 minutes.\n⚡ Reflashing on the same ROM will be quicker."
+  cp -af "$STOCK/services.jar" "$DB/services.jar"
 
 # Decompiling with apktool
-sfs " 👾 Decompiling services.jar" 1 "h"
-apktool d -f "$STOCK"/services.jar -o "$TMPDIR/services"
+sfs " 👾 Decompiling services.jar" "h"
+apktool d "$STOCK/services.jar" -o "$TMPDIR/services"
 
 # Apply smali patches
-sfs " 🧩 Patching Smali Files" 1 "h"
+sfs " 🧩 Patching Smali Files" "h"
 
 # Method Replacement Map
 declare -A method_map=(
@@ -265,30 +242,22 @@ sfs " 👾 Recompiling services.jar" "h"
 apktool b -f "$TMPDIR/services" -o "$TMPDIR/services.jar"
 
 # Replace only the modified dex in services.jar
-sfs "🖇️ Replacing only the modified dex file" 1 "h"
-Smali="$(getprop SMALI)"
-cnt=1
-while [[ "$cnt" -lt 20 && ! "$(basename "$Smali")" =~ ^smali(_classes[2-5]?)?$ ]]; do
-    Smali=$(dirname "$Smali")
-    cnt=$((cnt + 1))
-done
+sfs "🖇️ Replacing only the modified dex file" "h"
+mkdir -p "$TMPDIR/ORG" "$TMPDIR/MOD" "$DB/MOD"
+unzip -qo "$STOCK/services.jar" -d "$TMPDIR/ORG"
+cp -af "$TMPDIR/services/build/apk"/*.dex "$TMPDIR/ORG"
+cd "$TMPDIR/ORG"
+"$BIN/zip" -qr "$MOD/services.jar" .
+cp -af "$MOD/services.jar" "$DB/MOD/services.jar"
+fi
 
-if [ "$cnt" -lt 20 ]; then
-    SmaliBase=$(basename "$Smali")
-    if [[ "$SmaliBase" == "smali" ]]; then
-        Class="classes.dex"
-    else
-        suffix="${SmaliBase#smali_classes}"
-        Class="classes${suffix}.dex"
-    fi
-    mkdir -p "$TMPDIR/ORG" "$TMPDIR/MOD"
-    unzip -qo "$STOCK/services.jar" -d "$TMPDIR/ORG"
-    unzip -qo "$MOD/services.jar" -d "$TMPDIR/MOD"
-    cp -af "$TMPDIR/MOD/$Class" "$TMPDIR/ORG/$Class"
-    cd "$TMPDIR/ORG" || exit 1
-    "$BIN/zip" -qr "$MOD/services.jar" .
-    cp -af "$MOD/services.jar" "$DB/MOD/services.jar"
+sfs "🔗 @BuildBytes is quietly building things worth exploring. Want to be there early?" "h#"
+sfs "🔊 Vol+ = Yes, I’m in. early, curious, and ahead\n🔉 Vol- = No, I’ll scroll past and miss it\n"
+opt
+if [ $? -ne 1 ]; then
+  am start -a android.intent.action.VIEW -d https://telegram.me/BuildBytes >/dev/null 2>&1
+else
+  sfs "🫥 You passed.\nNo noise, no regret, just a silent skip over something built with intent.\nI’ll stay here, quietly excellent, waiting for those who notice before it’s popular."
 fi
 clean
-sfs "✨ All done! You can reboot now." 1 "h"
-fi
+sfs "✨ All done! You can reboot now." 1 "h#"
