@@ -99,3 +99,6 @@ Your support helps keep the project maintained and improve compatibility with ne
 
 - **[@nyxnrv](https://github.com/777kzn)**
   Tested the module on HyperOS Android 17 Kernel SU.
+
+- **[@Vikrant_R_Rajput ](https://telegram.me/DeskAestheticx)**
+  Tested the module on Samsung's OneUI Port Magisk.
