@@ -113,6 +113,11 @@ public class SfsPatcher {
         AtomicInteger totalPatchedMethods = new AtomicInteger(0);
         List<String> patchSummary = Collections.synchronizedList(new ArrayList<>());
 
+        File outDir = outputFile.getParentFile();
+        if (outDir == null) outDir = new File(".");
+        outDir.mkdirs();
+        final File tempDir = outDir;
+
         entryNames.parallelStream().forEach(entryName -> {
             try {
                 DexFile origDex = container.getEntry(entryName).getDexFile();
@@ -193,10 +198,8 @@ public class SfsPatcher {
 
                 DexFile rewrittenDex = rewriter.getDexFileRewriter().rewrite(origDex);
 
-                File outDir = outputFile.getParentFile();
-                if (outDir == null) outDir = new File(".");
-                outDir.mkdirs();
-                File tempDex = File.createTempFile("sfs_" + entryName.replace(".dex", "") + "_", ".dex", outDir);
+                String safePrefix = "sfs_" + entryName.replaceAll("[^a-zA-Z0-9]", "_") + "_";
+                File tempDex = File.createTempFile(safePrefix, ".dex", tempDir);
                 tempDex.deleteOnExit();
                 DexFileFactory.writeDexFile(tempDex.getAbsolutePath(), rewrittenDex);
                 modifiedDexFiles.put(entryName, tempDex);
@@ -228,39 +231,110 @@ public class SfsPatcher {
             outputFile.getParentFile().mkdirs();
         }
 
-        try (ZipFile zipIn = new ZipFile(inputFile);
-             ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(outputFile), 65536))) {
+        boolean hasContainers = false;
+        for (String e : entryNames) {
+            if (e.contains("/")) {
+                hasContainers = true;
+                break;
+            }
+        }
 
-            zos.setLevel(Deflater.BEST_SPEED);
-            Enumeration<? extends ZipEntry> entries = zipIn.entries();
-            while (entries.hasMoreElements()) {
-                ZipEntry entry = entries.nextElement();
-                String name = entry.getName();
+        if (!hasContainers) {
+            try (ZipFile zipIn = new ZipFile(inputFile);
+                 ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(outputFile), 65536))) {
 
-                if (modifiedDexFiles.containsKey(name)) {
-                    File patchedDex = modifiedDexFiles.get(name);
-                    ZipEntry newEntry = new ZipEntry(name);
-                    newEntry.setTime(System.currentTimeMillis());
-                    zos.putNextEntry(newEntry);
-                    try (InputStream fis = new BufferedInputStream(new FileInputStream(patchedDex), 65536)) {
-                        copyStream(fis, zos);
+                zos.setLevel(Deflater.BEST_SPEED);
+                Enumeration<? extends ZipEntry> entries = zipIn.entries();
+                while (entries.hasMoreElements()) {
+                    ZipEntry entry = entries.nextElement();
+                    String name = entry.getName();
+
+                    if (modifiedDexFiles.containsKey(name)) {
+                        File patchedDex = modifiedDexFiles.get(name);
+                        ZipEntry newEntry = new ZipEntry(name);
+                        newEntry.setTime(System.currentTimeMillis());
+                        zos.putNextEntry(newEntry);
+                        try (InputStream fis = new BufferedInputStream(new FileInputStream(patchedDex), 65536)) {
+                            copyStream(fis, zos);
+                        }
+                        zos.closeEntry();
+                        patchedDex.delete();
+                    } else {
+                        ZipEntry newEntry = new ZipEntry(name);
+                        newEntry.setTime(entry.getTime());
+                        if (entry.getMethod() == ZipEntry.STORED) {
+                            newEntry.setMethod(ZipEntry.STORED);
+                            newEntry.setSize(entry.getSize());
+                            newEntry.setCompressedSize(entry.getCompressedSize());
+                            newEntry.setCrc(entry.getCrc());
+                        }
+                        zos.putNextEntry(newEntry);
+                        try (InputStream is = zipIn.getInputStream(entry)) {
+                            copyStream(is, zos);
+                        }
+                        zos.closeEntry();
                     }
-                    zos.closeEntry();
-                    patchedDex.delete();
-                } else {
-                    ZipEntry newEntry = new ZipEntry(name);
-                    newEntry.setTime(entry.getTime());
-                    if (entry.getMethod() == ZipEntry.STORED) {
-                        newEntry.setMethod(ZipEntry.STORED);
-                        newEntry.setSize(entry.getSize());
-                        newEntry.setCompressedSize(entry.getCompressedSize());
-                        newEntry.setCrc(entry.getCrc());
+                }
+            }
+        } else {
+            List<File> finalDexFiles = new ArrayList<>();
+            List<File> toDelete = new ArrayList<>();
+            try {
+                for (int i = 0; i < entryNames.size(); i++) {
+                    String eName = entryNames.get(i);
+                    if (modifiedDexFiles.containsKey(eName)) {
+                        File f = modifiedDexFiles.get(eName);
+                        finalDexFiles.add(f);
+                        toDelete.add(f);
+                    } else {
+                        String safePrefix = "sfs_orig_" + i + "_";
+                        File f = File.createTempFile(safePrefix, ".dex", tempDir);
+                        toDelete.add(f);
+                        DexFileFactory.writeDexFile(f.getAbsolutePath(), container.getEntry(eName).getDexFile());
+                        finalDexFiles.add(f);
                     }
-                    zos.putNextEntry(newEntry);
-                    try (InputStream is = zipIn.getInputStream(entry)) {
-                        copyStream(is, zos);
+                }
+
+                try (ZipFile zipIn = new ZipFile(inputFile);
+                     ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(outputFile), 65536))) {
+
+                    zos.setLevel(Deflater.BEST_SPEED);
+                    Enumeration<? extends ZipEntry> entries = zipIn.entries();
+                    while (entries.hasMoreElements()) {
+                        ZipEntry entry = entries.nextElement();
+                        String name = entry.getName();
+                        if (name.endsWith(".dex")) {
+                            continue;
+                        }
+                        ZipEntry newEntry = new ZipEntry(name);
+                        newEntry.setTime(entry.getTime());
+                        if (entry.getMethod() == ZipEntry.STORED) {
+                            newEntry.setMethod(ZipEntry.STORED);
+                            newEntry.setSize(entry.getSize());
+                            newEntry.setCompressedSize(entry.getCompressedSize());
+                            newEntry.setCrc(entry.getCrc());
+                        }
+                        zos.putNextEntry(newEntry);
+                        try (InputStream is = zipIn.getInputStream(entry)) {
+                            copyStream(is, zos);
+                        }
+                        zos.closeEntry();
                     }
-                    zos.closeEntry();
+
+                    for (int i = 0; i < finalDexFiles.size(); i++) {
+                        String dexName = (i == 0) ? "classes.dex" : ("classes" + (i + 1) + ".dex");
+                        ZipEntry newEntry = new ZipEntry(dexName);
+                        newEntry.setTime(System.currentTimeMillis());
+                        zos.putNextEntry(newEntry);
+                        try (InputStream fis = new BufferedInputStream(new FileInputStream(finalDexFiles.get(i)), 65536)) {
+                            copyStream(fis, zos);
+                        }
+                        zos.closeEntry();
+                    }
+                }
+            } finally {
+                for (File f : toDelete) {
+                    f.delete();
                 }
             }
         }

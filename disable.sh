@@ -27,8 +27,23 @@ echo " 💻 Architecture - $ARCH"
 echo "###################################"
 echo
 
-# KernelSU / APatch Metamodule Notice
-if [ "$KSU" = "true" ] || [ -d "/data/adb/ksu" ] || [ "$APATCH" = "true" ] || [ -d "/data/adb/ap" ]; then
+# Root Manager Detection (binary & env checks, avoid false positives on Magisk)
+IS_MAGISK=false
+if [ -n "$MAGISK_VER" ] || magisk -v >/dev/null 2>&1 || su -v 2>/dev/null | grep -qi "magisk"; then
+  IS_MAGISK=true
+fi
+
+IS_KSU=false
+if [ "$KSU" = "true" ] || ksud -V >/dev/null 2>&1 || /data/adb/ksud -V >/dev/null 2>&1 || /data/adb/ksu/bin/ksud -V >/dev/null 2>&1 || su -v 2>/dev/null | grep -qi "ksu"; then
+  IS_KSU=true
+fi
+
+IS_APATCH=false
+if [ "$APATCH" = "true" ] || apd -v >/dev/null 2>&1 || apd -V >/dev/null 2>&1 || /data/adb/apd -v >/dev/null 2>&1 || /data/adb/ap/bin/apd -v >/dev/null 2>&1 || su -v 2>/dev/null | grep -qi "apatch"; then
+  IS_APATCH=true
+fi
+
+if [ "$IS_MAGISK" != "true" ] && { [ "$IS_KSU" = "true" ] || [ "$IS_APATCH" = "true" ]; }; then
   echo "📢 [KernelSU / APatch Detected]"
   echo "   ⚠️ Notice: Make sure a metamodule (e.g. Mountify"
   echo "   or Magic Mount) is enabled if overlayfs is inactive."
