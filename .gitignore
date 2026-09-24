@@ -1,0 +1,6 @@
+# Build output and IDE files
+.idea/
+*.iml
+patcher_src/bin/
+*.dex
+*.log

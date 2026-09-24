@@ -8,15 +8,45 @@ ARCH=$(getprop ro.product.cpu.abi)
 
 mkdir -p "$MOD" "$BIN"
 
-# Normalize backslash path if extracted by Windows zip tools
+LAST_MSG=""
+notify() {
+    local TITLE="$1"
+    local MSG="$2"
+    if [ "$MSG" != "$LAST_MSG" ]; then
+        local SAFE_MSG=$(printf '%b' "$MSG" | sed "s/'/'\\\\''/g")
+        su -lp 2000 -c "cmd notification post -S bigtext -t '$TITLE' 'Status' '$SAFE_MSG'" >/dev/null 2>&1
+        LAST_MSG="$MSG"
+    fi
+}
+
+# Fix backslash path
 if [ -f "$MODPATH/system\\bin\\patcher.jar" ]; then
   mv -f "$MODPATH/system\\bin\\patcher.jar" "$BIN/patcher.jar"
 fi
 
-# Read properties
+# Read property
 padh() {
   grep -m 1 "^$1=" "$2" 2>/dev/null | sed 's/^.*=//'
 }
+
+# Check root
+ADBDIR="/data/adb"
+if [ -d "$ADBDIR/magisk" ] && magisk -V >/dev/null 2>&1; then
+  ROOT="Magisk"
+elif [ -d "$ADBDIR/ksu" ] && ksud -V >/dev/null 2>&1; then
+  ROOT="KernelSU"
+elif [ -d "$ADBDIR/ap" ] && apd -V >/dev/null 2>&1; then
+  ROOT="APatch"
+else
+  ROOT="Unknown"
+fi
+
+# Determine mount mode
+if [ "$ROOT" != "Magisk" ] && [ -d "$ADBDIR/metamodule" ]; then
+  MOUNT_MODE="Meta-Module"
+else
+  MOUNT_MODE="Standalone"
+fi
 
 # UI Banner
 echo "###################################"
@@ -24,31 +54,12 @@ echo " 👀 $(padh "name" "$MODPATH/module.prop")"
 echo " 🌟 Made By $(padh "author" "$MODPATH/module.prop")"
 echo " ⚡ Version - $(padh "version" "$MODPATH/module.prop")"
 echo " 💻 Architecture - $ARCH"
+echo " 📂 Mounted: $MOUNT_MODE"
+if [ "$MOUNT_MODE" = "Standalone" ]; then
+  echo " ℹ️ Notice: Standalone mode (No Meta-Module required, but compatible)"
+fi
 echo "###################################"
 echo
-
-# Root Manager Detection (binary & env checks, avoid false positives on Magisk)
-IS_MAGISK=false
-if [ -n "$MAGISK_VER" ] || magisk -v >/dev/null 2>&1 || su -v 2>/dev/null | grep -qi "magisk"; then
-  IS_MAGISK=true
-fi
-
-IS_KSU=false
-if [ "$KSU" = "true" ] || ksud -V >/dev/null 2>&1 || /data/adb/ksud -V >/dev/null 2>&1 || /data/adb/ksu/bin/ksud -V >/dev/null 2>&1 || su -v 2>/dev/null | grep -qi "ksu"; then
-  IS_KSU=true
-fi
-
-IS_APATCH=false
-if [ "$APATCH" = "true" ] || apd -v >/dev/null 2>&1 || apd -V >/dev/null 2>&1 || /data/adb/apd -v >/dev/null 2>&1 || /data/adb/ap/bin/apd -v >/dev/null 2>&1 || su -v 2>/dev/null | grep -qi "apatch"; then
-  IS_APATCH=true
-fi
-
-if [ "$IS_MAGISK" != "true" ] && { [ "$IS_KSU" = "true" ] || [ "$IS_APATCH" = "true" ]; }; then
-  echo "📢 [KernelSU / APatch Detected]"
-  echo "   ⚠️ Notice: Make sure a metamodule (e.g. Mountify"
-  echo "   or Magic Mount) is enabled if overlayfs is inactive."
-  echo
-fi
 
 jar_path="$STOCK/services.jar"
 jar_name="services.jar"
@@ -67,17 +78,35 @@ echo "=================================================="
 echo " ⚡ Patching $jar_name (parallel dexlib2)..."
 echo "=================================================="
 
+# Default mode: ALLOW
+setprop persist.sys.sfs.screenshot true
+
 dalvikvm -Xmx512m -Djava.io.tmpdir="$MOD" -cp "$BIN/patcher.jar" build.bytes.sfs.SfsPatcher "$jar_path" "$MOD/$jar_name" || {
   echo "💥 Dalvik patcher failed for $jar_name"
   exit 1
 }
 
-# Cleanup installer binaries from installed module to save space
+# Set permissions
+[ -f "$MODPATH/action.sh" ] && chmod 755 "$MODPATH/action.sh"
+[ -f "$MODPATH/service.sh" ] && chmod 755 "$MODPATH/service.sh"
+[ -f "$MODPATH/post-fs-data.sh" ] && chmod 755 "$MODPATH/post-fs-data.sh"
+
+# Cleanup installer files
 rm -f "$MODPATH/disable.sh"
 rm -rf "$BIN"
+
+# Clear dalvik-cache
+rm -rf /data/dalvik-cache/* 2>/dev/null
 
 echo
 echo "**************************************************"
 echo " 🔗 Channel: @BuildBytes"
+echo " 🎛️ Action Button: Enabled in Magisk/KSU/APatch"
+echo " 🔄 You can toggle mode anytime via Action button"
 echo " ✨ All done! Please reboot your device now."
 echo "**************************************************"
+
+# Post install notification and redirect to Telegram channel
+sleep 3
+notify "Simple Flag Secure" "Install done! Please reboot now. Join @BuildBytes for future projects that save your time & headache! 😊"
+am start -a android.intent.action.VIEW -d https://telegram.me/BuildBytes >/dev/null 2>&1

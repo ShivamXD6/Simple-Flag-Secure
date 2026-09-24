@@ -2,14 +2,17 @@
 import os
 import zipfile
 
-OUTPUT_ZIP = "Simple_Flag_Secure_v6.zip"
+OUTPUT_ZIP = "Simple_Flag_Secure_v7.zip"
 
 FILES_TO_ADD = [
     ("META-INF/com/google/android/update-binary", "META-INF/com/google/android/update-binary"),
     ("META-INF/com/google/android/updater-script", "META-INF/com/google/android/updater-script"),
+    ("action.sh", "action.sh"),
     ("customize.sh", "customize.sh"),
     ("disable.sh", "disable.sh"),
     ("module.prop", "module.prop"),
+    ("post-fs-data.sh", "post-fs-data.sh"),
+    ("service.sh", "service.sh"),
     ("system/bin/patcher.jar", "system/bin/patcher.jar"),
 ]
 
