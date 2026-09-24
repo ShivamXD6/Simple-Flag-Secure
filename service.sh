@@ -15,7 +15,7 @@ notify() {
     fi
 }
 
-BASE_DESC="Bypasses screenshot restrictions & hides screenshot detection (A14+). Supports Magisk, KernelSU & APatch, no Zygisk, LSPosed or Meta Module required."
+BASE_DESC="Bypasses screenshot restrictions and hides screenshot detection (A14+). Supports Magisk, KernelSU and APatch, no Zygisk, LSPosed or Meta Module required."
 
 # Wait for boot completion
 while [ "$(getprop sys.boot_completed)" != "1" ]; do

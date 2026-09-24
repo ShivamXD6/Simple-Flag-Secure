@@ -10,7 +10,7 @@
 
 - **Action Button Guard**: Prevents invalid toggles and SystemUI restarts when `services.jar` isn't mounted, while alerting the user and logging the failure.
 
-- **Live Mount Status**: Displays real-time mount health (`[Mount: OK]` / `[Mount: FAIL]`) directly in the module manager.
+- **Live Status in Module Description**: Displays real-time mode status (`[ 🔓 ALLOWED ]` / `[ 🔒 BLOCKED ]`) directly in the module manager.
 
 - **Boot Integrity & Health Check**: Performs fast binary mount checks on boot with automatic status notifications.
 
@@ -19,5 +19,7 @@
 - **Rich Shell Notifications**: Added notifications for mode changes, boot mount status, and installation completion.
 
 - **Direct Manager Updates**: Added one-click update checking and downloading through Magisk, KernelSU, and APatch.
+
+- **Auto-Saved Installation Logs**: Installation logs are now automatically saved to `/sdcard/Download/sfs_install.log` and the module folder without needing to manually click the save button.
 
 - **Auto-Cleanup**: Diagnostic logs and temporary files are automatically removed when the module is uninstalled.

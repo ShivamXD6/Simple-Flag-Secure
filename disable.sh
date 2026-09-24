@@ -100,13 +100,13 @@ rm -rf /data/dalvik-cache/* 2>/dev/null
 
 echo
 echo "**************************************************"
-echo " 🔗 Channel: @BuildBytes"
 echo " 🎛️ Action Button: Enabled in Magisk/KSU/APatch"
 echo " 🔄 You can toggle mode anytime via Action button"
+echo " 📝 Install Log: Auto-saved to /sdcard/Download"
 echo " ✨ All done! Please reboot your device now."
 echo "**************************************************"
 
 # Post install notification and redirect to Telegram channel
-sleep 3
 notify "Simple Flag Secure" "Install done! Please reboot now. Join @BuildBytes for future projects that save your time & headache! 😊"
+sleep 3
 am start -a android.intent.action.VIEW -d https://telegram.me/BuildBytes >/dev/null 2>&1

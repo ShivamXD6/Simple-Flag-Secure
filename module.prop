@@ -4,4 +4,4 @@ version=v7
 versionCode=70
 author=@BuildBytes (@ShivamXD6 aka @ShastikXD)
 updateJson=https://raw.githubusercontent.com/ShivamXD6/Simple-Flag-Secure/main/update.json
-description=Bypasses screenshot restrictions & hides screenshot detection (A14+). Supports Magisk, KernelSU & APatch, no Zygisk, LSPosed or Meta Module required.
+description=Bypasses screenshot restrictions and hides screenshot detection (A14+). Supports Magisk, KernelSU and APatch, no Zygisk, LSPosed or Meta Module required.

@@ -36,8 +36,8 @@ Removing screenshot restrictions is straightforward:
 1. **Install the Module**
    Open your Magisk, KernelSU, or APatch manager → **Modules** → **Install from storage** → Select the **Simple Flag Secure** ZIP.
 
-2. **Save Installation Logs (Optional)**
-   Use the **disk icon in the top-right corner** to save installation logs. These logs are useful for troubleshooting if the module doesn't work.
+2. **Automatic Installation Logs**
+   Installation logs are **automatically saved** to `/sdcard/Download/sfs_install.log` (and inside the module folder). No need to manually press the save button!
 
 3. **Reboot**
    Restart your device to apply the changes.
