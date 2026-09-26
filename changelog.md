@@ -1,25 +1,11 @@
-# Simple Flag Secure v7 Changelog
+# 👀 Simple Flag Secure v7.7 - (_Thala for a Reason_)
 
-- **Action Button Mode Toggle**: Switch dynamically between **ALLOWED** (screenshots unblocked) and **BLOCKED** (privacy mode) directly from Magisk, KernelSU, or APatch Manager — no reboot required.
-
-- **Fixed OnePlus Power Button Issue**: Fixed broken power button and hardware key combinations on OnePlus (OxygenOS/ColorOS) devices by patching `verify`.
-
-- **Zero Dependencies**: Full standalone mounting for KernelSU and APatch without requiring Meta-Module, while remaining fully compatible with it.
-
-- **Smart SystemUI Reload**: Automatically reloads SystemUI after toggling with a 3-second delay and safety notification, applying changes system-wide without killing background apps.
-
-- **Action Button Guard**: Prevents invalid toggles and SystemUI restarts when `services.jar` isn't mounted, while alerting the user and logging the failure.
-
-- **Live Status in Module Description**: Displays real-time mode status (`[ 🔓 ALLOWED ]` / `[ 🔒 BLOCKED ]`) directly in the module manager.
-
-- **Boot Integrity & Health Check**: Performs fast binary mount checks on boot with automatic status notifications.
-
-- **Built-in Auto Diagnostics**: Added `action.sh debug` to generate targeted logs for mount health, window focus, secure flags, and OEM policies such as OnePlus `StrategyBlackscreenshot`.
-
-- **Rich Shell Notifications**: Added notifications for mode changes, boot mount status, and installation completion.
-
-- **Direct Manager Updates**: Added one-click update checking and downloading through Magisk, KernelSU, and APatch.
-
-- **Auto-Saved Installation Logs**: Installation logs are now automatically saved to `/sdcard/Download/sfs_install.log` and the module folder without needing to manually click the save button.
-
-- **Auto-Cleanup**: Diagnostic logs and temporary files are automatically removed when the module is uninstalled.
+- 🪶 **75% Smaller Size**: Shrunk from 1.1 MB down to just **286 KB** while keeping all features intact.
+- 📱 **Fixed Xiaomi & POCO (HyperOS / MIUI)**: Fixed screenshot blocking and capture timeouts on HyperOS and MIUI.
+- 🔕 **Removed Screen Share Warning**: Suppressed the annoying _"App content hidden from screen share for security"_ popup on Android 15/16.
+- 🎛️ **Volume Key Action Menu**:
+  - **[Vol +]**: Instantly toggle between **Allowed** and **Blocked** (Privacy Mode) without rebooting.
+  - **[Vol -]**: Starts a live debug recording session with simple step-by-step guidance.
+- ⚡ **Easy 1-Click Log Recording**: Press any button (Power or Volume) to finish recording. Both `sfs_debug.log` and `services.jar` are automatically saved to your **Downloads** folder.
+- 🔋 **Zero Battery Drain**: 100% stock battery life with zero background services or daemons running.
+- 🎨 **Cleaner System Icons**: Clean notifications with official system icons for Allowed, Blocked, and Saved states.

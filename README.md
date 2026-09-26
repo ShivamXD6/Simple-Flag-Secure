@@ -18,16 +18,39 @@ You may be wondering: **Why use this when other FLAG_SECURE modules (dependent o
 
 Simple Flag Secure focuses on being lightweight, maintainable, and compatible with newer Android versions and root solutions.
 
-- 🛠️ **No Zygisk or LSPosed Required** - No need to installa anything extra like Zygisk, LSPosed or any Meta-Module, it works without them.
-- 🚫 **Screenshot Detection Blocking** — Prevents apps from detecting when a screenshot is taken like in Snapchat or WhatsApp (only on Android 14+).
-- 🎛️ **Action Button Mode Toggle** — Switch between ALLOWED and BLOCKED (Privacy Mode) directly from your manager without rebooting.
-- 🩺 **Built-in Auto Diagnostics** — Easily generate targeted diagnostic logs (`sfs_debug.log`) via Action button or `action.sh debug`.
-- ⭐ **Modern Root Manager Support** — Supports Magisk, KernelSU, APatch, and their forks.
-- 🔄 **In-App Manager Updates** — Native support for one-click updates inside root managers via `updateJson`.
-- 💾 **Lightweight & Standalone** — Zero dependencies. Mounts standalone or with MetaModule.
-- ⚡ **Much Faster** — Uses dexlib2 patcher with parallel processing for faster patching of flags.
-- 🖥️ **DEX-Only Patching** — Modifies only the required DEX files, helping avoid side effects such as the broken power button issue reported on Android 14+.
-- 📱 **OEM Compatibility** — Supports OEM skins such as Realme UI, ColorOS, OxygenOS, HyperOS, and One UI.
+- 🛠️ **No Zygisk or LSPosed Required** — 100% standalone, no extra frameworks or meta-modules needed.
+- 🪶 **Ultra-Compact (286 KB)** — Shrunk by 75% with zero bloat; patcher runs once and cleans up immediately.
+- 🔋 **Zero Battery Drain & RAM Friendly** — Patched once at install time; zero background services or daemons running.
+- 🚫 **Screenshot Detection Blocking** — Prevents apps from detecting screenshots (WhatsApp, Snapchat, etc. on Android 14+).
+- 🔕 **Suppresses Screen Share Warnings** — Hides the irritating *"App content hidden from screen share"* popup on Android 15/16.
+- 🎛️ **Interactive Volume Key Menu** — Switch between ALLOWED and BLOCKED (`[Vol +]`) or run live diagnostics (`[Vol -]`) without rebooting.
+- 🩺 **Built-in Auto Diagnostics** — Saves diagnostic logs (`sfs_debug.log`) & `services.jar` directly to your Downloads folder.
+- ⭐ **Modern Root Manager Support** — Works seamlessly with Magisk, KernelSU, APatch, and forks.
+- 🔄 **In-App Manager Updates** — Native one-click updates directly inside root managers via `updateJson`.
+- 📱 **Broad OEM Compatibility** — Full support for HyperOS, MIUI, OxygenOS, ColorOS, Realme UI, and One UI.
+
+### 📊 How Does Simple Flag Secure Compare?
+
+| Feature | **Simple Flag Secure** | **ih8SecureLock** | **DisableFlagSecure** |
+| :--- | :---: | :---: | :---: |
+| **Architecture** | **System Framework Patch** (`services.jar`) | Zygisk In-Process Hook (`.so`) | Xposed In-Process Hook (LSPosed) |
+| **Dependencies** | **None (Standalone)** | Requires Zygisk / ZygiskNext | Requires LSPosed + Zygisk |
+| **Works with Banking Apps / Denylist** | ✅ **100% Compatible** | ❌ **Broken on Denylist** *(stops working if unmount/hide root is active)* | ⚠️ **Fails or triggers root detection** |
+| **Client App Tamper Detection** | 🛡️ **Zero (Undetectable)** | ⚠️ High (Foreign `.so` injected into app memory) | ❌ High (Xposed hooks easily flagged by banks) |
+| **Battery & CPU Overhead** | 🔋 **0% (Zero drain)** | ⚠️ In-memory hook overhead | ❌ High drain (Xposed daemon + bridge) |
+| **Runtime RAM Usage** | ⚡ **0 MB (No background processes)** | Persistent memory overhead per app | Heavy (~50MB+ for LSPosed daemon) |
+| **Hides Screenshot Alerts (Android 14+)** | ✅ **Built-in System-wide** | ⚠️ Only for hooked apps | ❌ Not supported |
+| **Dynamic Privacy Mode (Block / Allow)** | ✅ **Interactive Vol Key Toggle** | ❌ None | ❌ None |
+| **Supported Root Managers** | Magisk, KernelSU, APatch | Magisk, KernelSU | Magisk, KernelSU (via LSPosed) |
+
+#### 💡 Why Standalone Framework Patching is Better:
+1. **Works with Banking Apps & Denylist:**
+   Zygisk and LSPosed modules inject code into apps. When you hide root from banking apps using Magisk/KernelSU's **Denylist** (Unmount Modules), Zygisk and LSPosed are disabled — breaking screenshots for the apps where you need them most! Simple Flag Secure patches the Android system itself, so screenshots work everywhere even with full root hiding enabled.
+2. **Zero Detection by Apps:**
+   Restricted apps are never modified or injected with foreign code. Banking and streaming apps cannot detect that screenshots are unlocked.
+3. **Zero Battery Drain:**
+   No background services, hook bridges, or daemons running. Simple Flag Secure patches once during install and leaves behind 0 MB RAM usage and 0% battery drain.
+
 
 ## 📥 Installation
 
@@ -58,17 +81,16 @@ If the module causes a bootloop or prevents Android from starting:
 4. Reboot into System.
 5. Report the issue in the **[Build Bytes Discussion](https://telegram.me/BuildBytesDiscussion)** group.
 
-### 🚫 Module Doesn't Work
+### 🚫 Module Doesn't Work / Need Help?
 
-If the module installs successfully but doesn't work:
+Taking diagnostic logs is now super easy directly from your root manager:
 
-1. Open the app where screenshots are failing and try taking a screenshot once.
-2. Run this command in Termux:
-   ```sh
-   su -c "sh /data/adb/modules/simple_flag_secure/action.sh debug"
-   ```
-3. Grab the generated log from `/data/adb/modules/simple_flag_secure/sfs_debug.log`.
-4. Send the log file to the **[Build Bytes Discussion](https://telegram.me/BuildBytesDiscussion)** group for instant support!
+1. Tap the **Action** button in Magisk, KernelSU, or APatch (or run `su -c "sh /data/adb/modules/simple_flag_secure/action.sh record"` in Termux).
+2. Press **Volume Down [Vol -]** within 10 seconds to start the live recording session.
+3. Switch to your restricted app and try taking a screenshot.
+4. Press **ANY hardware button** (Volume Up, Volume Down, or Power) — recording stops instantly with 0ms delay!
+5. Both `sfs_debug.log` and your system's `services.jar` are automatically saved to your **`Downloads`** folder (`/sdcard/Download/`), and Telegram opens directly to **[Build Bytes Discussion](https://telegram.me/BuildBytesDiscussion)**.
+6. Share **BOTH** files (`sfs_debug.log` & `services.jar`) in the group for instant help!
 
 ## 🙏 Support & Donations
 

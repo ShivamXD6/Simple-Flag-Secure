@@ -1,7 +1,7 @@
 id=simple_flag_secure
 name=Simple Flag Secure
-version=v7
-versionCode=70
+version=v7.7
+versionCode=77
 author=@BuildBytes (@ShivamXD6 aka @ShastikXD)
 updateJson=https://raw.githubusercontent.com/ShivamXD6/Simple-Flag-Secure/main/update.json
 description=Bypasses screenshot restrictions and hides screenshot detection (A14+). Supports Magisk, KernelSU and APatch, no Zygisk, LSPosed or Meta Module required.

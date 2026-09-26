@@ -10,9 +10,14 @@ import com.android.tools.smali.dexlib2.iface.Method;
 import com.android.tools.smali.dexlib2.iface.MethodImplementation;
 import com.android.tools.smali.dexlib2.iface.MethodParameter;
 import com.android.tools.smali.dexlib2.iface.MultiDexContainer;
+import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction;
 import com.android.tools.smali.dexlib2.iface.instruction.Instruction;
+import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction;
+import com.android.tools.smali.dexlib2.iface.instruction.RegisterRangeInstruction;
+import com.android.tools.smali.dexlib2.iface.reference.MethodReference;
 import com.android.tools.smali.dexlib2.immutable.ImmutableClassDef;
 import com.android.tools.smali.dexlib2.immutable.ImmutableMethod;
+import com.android.tools.smali.dexlib2.immutable.ImmutableMethodParameter;
 import com.android.tools.smali.dexlib2.immutable.ImmutableMethodImplementation;
 import com.android.tools.smali.dexlib2.immutable.instruction.ImmutableInstruction10x;
 import com.android.tools.smali.dexlib2.immutable.instruction.ImmutableInstruction11n;
@@ -74,8 +79,11 @@ public class SfsPatcher {
         SERVICES_PRESET.put("hasSecureWindowOnScreen", PatchAction.DYNAMIC_PROP_INVERT); // DisplayContent
         SERVICES_PRESET.put("notifyScreenshotListeners", PatchAction.RETURN_LIST);       // A14+ Anti-detection
         SERVICES_PRESET.put("canBeScreenshotTarget", PatchAction.DYNAMIC_PROP_DIRECT);   // RootWindowContainer
-        SERVICES_PRESET.put("notAllowCaptureDisplay", PatchAction.DYNAMIC_PROP_INVERT);  // Xiaomi HyperOS/MIUI
+        SERVICES_PRESET.put("notAllowCaptureDisplay", PatchAction.DYNAMIC_PROP_INVERT);  // Xiaomi HyperOS/MIUI Stub
+        SERVICES_PRESET.put("accessScreenContentEnable", PatchAction.RETURN_TRUE);       // Xiaomi HyperOS/MIUI Stub
         SERVICES_PRESET.put("hasSecure", PatchAction.DYNAMIC_PROP_INVERT);               // OPPO/OnePlus/Realme
+        SERVICES_PRESET.put("shouldBlockScreenCaptureForApp", PatchAction.RETURN_FALSE);  // Android 15/16: Suppress irritating screen share security toast
+        SERVICES_PRESET.put("isAllowedDisableScreenshot", PatchAction.DYNAMIC_PROP_INVERT);     // Xiaomi HyperOS WindowStateAnimator
     }
 
     public static void main(String[] args) {
@@ -147,6 +155,20 @@ public class SfsPatcher {
                             targetClasses.add(classType);
                             break;
                         }
+                        MethodImplementation impl = method.getImplementation();
+                        if (impl != null) {
+                            for (Instruction inst : impl.getInstructions()) {
+                                if (inst instanceof ReferenceInstruction) {
+                                    Object ref = ((ReferenceInstruction) inst).getReference();
+                                    if (ref instanceof MethodReference) {
+                                        if ("notAllowCaptureDisplay".equals(((MethodReference) ref).getName())) {
+                                            targetClasses.add(classType);
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -165,6 +187,10 @@ public class SfsPatcher {
                                 if (!targetClasses.contains(type) && !recordClasses.contains(type)) {
                                     return classDef;
                                 }
+
+                                boolean needsCaptureHelper = false;
+                                MethodReference captureTargetRef = null;
+                                Opcode origCaptureInvokeOp = Opcode.INVOKE_INTERFACE;
 
                                 List<Method> rewrittenMethods = new ArrayList<>();
                                 for (Method method : classDef.getMethods()) {
@@ -253,7 +279,100 @@ public class SfsPatcher {
                                         continue;
                                     }
 
+                                    // Intercept invocations of notAllowCaptureDisplay inside caller methods (e.g. WindowManagerService.captureDisplay)
+                                    MethodImplementation impl = method.getImplementation();
+                                    if (impl != null) {
+                                        boolean methodChanged = false;
+                                        List<Instruction> newInstructions = new ArrayList<>();
+                                        for (Instruction inst : impl.getInstructions()) {
+                                            if (inst instanceof ReferenceInstruction) {
+                                                Object ref = ((ReferenceInstruction) inst).getReference();
+                                                if (ref instanceof MethodReference) {
+                                                    MethodReference mr = (MethodReference) ref;
+                                                    if ("notAllowCaptureDisplay".equals(mr.getName())) {
+                                                        captureTargetRef = mr;
+                                                        origCaptureInvokeOp = inst.getOpcode();
+                                                        List<String> helperParams = new ArrayList<>();
+                                                        helperParams.add(mr.getDefiningClass());
+                                                        for (CharSequence p : mr.getParameterTypes()) {
+                                                            helperParams.add(p.toString());
+                                                        }
+                                                        ImmutableMethodReference sfsRef = new ImmutableMethodReference(
+                                                                definingClass,
+                                                                "sfs$notAllowCaptureDisplay",
+                                                                helperParams,
+                                                                mr.getReturnType()
+                                                        );
+                                                        if (inst instanceof FiveRegisterInstruction) {
+                                                            FiveRegisterInstruction fri = (FiveRegisterInstruction) inst;
+                                                            newInstructions.add(new ImmutableInstruction35c(
+                                                                    Opcode.INVOKE_STATIC,
+                                                                    fri.getRegisterCount(),
+                                                                    fri.getRegisterC(),
+                                                                    fri.getRegisterD(),
+                                                                    fri.getRegisterE(),
+                                                                    fri.getRegisterF(),
+                                                                    fri.getRegisterG(),
+                                                                    sfsRef
+                                                            ));
+                                                            methodChanged = true;
+                                                            needsCaptureHelper = true;
+                                                            continue;
+                                                        } else if (inst instanceof RegisterRangeInstruction) {
+                                                            RegisterRangeInstruction rri = (RegisterRangeInstruction) inst;
+                                                            newInstructions.add(new ImmutableInstruction3rc(
+                                                                    Opcode.INVOKE_STATIC_RANGE,
+                                                                    rri.getStartRegister(),
+                                                                    rri.getRegisterCount(),
+                                                                    sfsRef
+                                                            ));
+                                                            methodChanged = true;
+                                                            needsCaptureHelper = true;
+                                                            continue;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            newInstructions.add(inst);
+                                        }
+
+                                        if (methodChanged) {
+                                            MethodImplementation newImpl = new ImmutableMethodImplementation(
+                                                    impl.getRegisterCount(),
+                                                    newInstructions,
+                                                    impl.getTryBlocks(),
+                                                    impl.getDebugItems()
+                                            );
+                                            rewrittenMethods.add(new ImmutableMethod(
+                                                    definingClass,
+                                                    name,
+                                                    method.getParameters(),
+                                                    method.getReturnType(),
+                                                    method.getAccessFlags(),
+                                                    method.getAnnotations(),
+                                                    method.getHiddenApiRestrictions(),
+                                                    newImpl
+                                            ));
+                                            String log = entryName + " -> " + definingClass + "->" + name + "() [INTERCEPT_CAPTURE_DISPLAY]";
+                                            synchronized (System.out) {
+                                                System.out.println("   ✓ " + log);
+                                            }
+                                            patchedDetails.add(log);
+                                            continue;
+                                        }
+                                    }
+
                                     rewrittenMethods.add(method);
+                                }
+
+                                if (needsCaptureHelper && captureTargetRef != null) {
+                                    Method helper = createSfsNotAllowCaptureDisplayMethod(type, captureTargetRef, origCaptureInvokeOp);
+                                    rewrittenMethods.add(helper);
+                                    String log = entryName + " -> " + type + "->sfs$notAllowCaptureDisplay() [HELPER_ADDED]";
+                                    synchronized (System.out) {
+                                        System.out.println("   ✓ " + log);
+                                    }
+                                    patchedDetails.add(log);
                                 }
 
                                 return new ImmutableClassDef(
@@ -539,6 +658,79 @@ public class SfsPatcher {
         items.add(new RealInst(new ImmutableInstruction11x(Opcode.RETURN_OBJECT, 0)));
 
         return new ImmutableMethodImplementation(totalRegisters, resolveInstructions(items), null, null);
+    }
+
+    private static Method createSfsNotAllowCaptureDisplayMethod(String definingClass, MethodReference targetRef, Opcode origInvokeOp) {
+        int paramRegs = 1; // for receiver stub
+        for (CharSequence cs : targetRef.getParameterTypes()) {
+            String pType = cs.toString();
+            if ("J".equals(pType) || "D".equals(pType)) {
+                paramRegs += 2;
+            } else {
+                paramRegs += 1;
+            }
+        }
+        int localRegs = 2; // v0, v1
+        int totalRegisters = Math.max(2, paramRegs + localRegs);
+        int p0 = totalRegisters - paramRegs;
+
+        List<InstItem> items = new ArrayList<>();
+        // Read property (default true)
+        items.add(new RealInst(new ImmutableInstruction21c(Opcode.CONST_STRING, 0, new ImmutableStringReference("persist.sys.sfs.screenshot"))));
+        items.add(new RealInst(new ImmutableInstruction11n(Opcode.CONST_4, 1, 1)));
+        items.add(new RealInst(new ImmutableInstruction35c(Opcode.INVOKE_STATIC, 2, 0, 1, 0, 0, 0,
+                new ImmutableMethodReference("Landroid/os/SystemProperties;", "getBoolean", Arrays.asList("Ljava/lang/String;", "Z"), "Z"))));
+        items.add(new RealInst(new ImmutableInstruction11x(Opcode.MOVE_RESULT, 0)));
+
+        // If SFS is enabled (v0 != 0), branch is NOT taken -> return false (not disallowed = allowed!)
+        items.add(new Branch21t(Opcode.IF_EQZ, 0, "sfs_disabled"));
+        items.add(new RealInst(new ImmutableInstruction11n(Opcode.CONST_4, 0, 0)));
+        items.add(new RealInst(new ImmutableInstruction11x(Opcode.RETURN, 0)));
+
+        // SFS is disabled: delegate to original stub implementation
+        items.add(new LabelItem("sfs_disabled"));
+        items.add(new Branch21t(Opcode.IF_EQZ, p0, "stub_null"));
+
+        Opcode delegateOp = (origInvokeOp == Opcode.INVOKE_INTERFACE || origInvokeOp == Opcode.INVOKE_INTERFACE_RANGE)
+                ? Opcode.INVOKE_INTERFACE : Opcode.INVOKE_VIRTUAL;
+        int r0 = (paramRegs > 0) ? p0 : 0;
+        int r1 = (paramRegs > 1) ? p0 + 1 : 0;
+        int r2 = (paramRegs > 2) ? p0 + 2 : 0;
+        int r3 = (paramRegs > 3) ? p0 + 3 : 0;
+        int r4 = (paramRegs > 4) ? p0 + 4 : 0;
+        if (paramRegs <= 5) {
+            items.add(new RealInst(new ImmutableInstruction35c(delegateOp, paramRegs, r0, r1, r2, r3, r4, targetRef)));
+        } else {
+            Opcode rangeOp = (delegateOp == Opcode.INVOKE_INTERFACE) ? Opcode.INVOKE_INTERFACE_RANGE : Opcode.INVOKE_VIRTUAL_RANGE;
+            items.add(new RealInst(new ImmutableInstruction3rc(rangeOp, p0, paramRegs, targetRef)));
+        }
+        items.add(new RealInst(new ImmutableInstruction11x(Opcode.MOVE_RESULT, 0)));
+        items.add(new RealInst(new ImmutableInstruction11x(Opcode.RETURN, 0)));
+
+        // Stub was null: return false (allowed)
+        items.add(new LabelItem("stub_null"));
+        items.add(new RealInst(new ImmutableInstruction11n(Opcode.CONST_4, 0, 0)));
+        items.add(new RealInst(new ImmutableInstruction11x(Opcode.RETURN, 0)));
+
+        MethodImplementation impl = new ImmutableMethodImplementation(totalRegisters, resolveInstructions(items), null, null);
+
+        List<MethodParameter> params = new ArrayList<>();
+        params.add(new ImmutableMethodParameter(targetRef.getDefiningClass(), Collections.emptySet(), "stub"));
+        int pIdx = 1;
+        for (CharSequence cs : targetRef.getParameterTypes()) {
+            params.add(new ImmutableMethodParameter(cs.toString(), Collections.emptySet(), "param" + (pIdx++)));
+        }
+
+        return new ImmutableMethod(
+                definingClass,
+                "sfs$notAllowCaptureDisplay",
+                params,
+                "Z",
+                AccessFlags.PRIVATE.getValue() | AccessFlags.STATIC.getValue(),
+                Collections.emptySet(),
+                Collections.emptySet(),
+                impl
+        );
     }
 
     private static void copyStream(InputStream in, OutputStream out) throws IOException {

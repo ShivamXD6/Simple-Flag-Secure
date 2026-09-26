@@ -2,7 +2,7 @@
 import os
 import zipfile
 
-OUTPUT_ZIP = "Simple_Flag_Secure_v7.zip"
+OUTPUT_ZIP = "Simple_Flag_Secure_v7.7.zip"
 
 FILES_TO_ADD = [
     ("META-INF/com/google/android/update-binary", "META-INF/com/google/android/update-binary"),
@@ -13,7 +13,7 @@ FILES_TO_ADD = [
     ("module.prop", "module.prop"),
     ("post-fs-data.sh", "post-fs-data.sh"),
     ("service.sh", "service.sh"),
-    ("system/bin/patcher.jar", "system/bin/patcher.jar"),
+    ("system/bin/sfs.jar", "system/bin/sfs.jar"),
 ]
 
 if os.path.exists(OUTPUT_ZIP):

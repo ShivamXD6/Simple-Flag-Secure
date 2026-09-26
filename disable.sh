@@ -12,24 +12,18 @@ LAST_MSG=""
 notify() {
     local TITLE="$1"
     local MSG="$2"
+    local ICON="${3:-@android:drawable/stat_sys_download_done}"
     if [ "$MSG" != "$LAST_MSG" ]; then
         local SAFE_MSG=$(printf '%b' "$MSG" | sed "s/'/'\\\\''/g")
-        su -lp 2000 -c "cmd notification post -S bigtext -t '$TITLE' 'Status' '$SAFE_MSG'" >/dev/null 2>&1
+        su -lp 2000 -c "cmd notification post -i '$ICON' -S bigtext -t '$TITLE' 'SFS_INSTALL' '$SAFE_MSG'" >/dev/null 2>&1
         LAST_MSG="$MSG"
     fi
 }
 
-# Fix backslash path
-if [ -f "$MODPATH/system\\bin\\patcher.jar" ]; then
-  mv -f "$MODPATH/system\\bin\\patcher.jar" "$BIN/patcher.jar"
-fi
-
-# Read property
 padh() {
   grep -m 1 "^$1=" "$2" 2>/dev/null | sed 's/^.*=//'
 }
 
-# Check root
 ADBDIR="/data/adb"
 if [ -d "$ADBDIR/magisk" ] && magisk -V >/dev/null 2>&1; then
   ROOT="Magisk"
@@ -41,14 +35,12 @@ else
   ROOT="Unknown"
 fi
 
-# Determine mount mode
 if [ "$ROOT" != "Magisk" ] && [ -d "$ADBDIR/metamodule" ]; then
   MOUNT_MODE="Meta-Module"
 else
   MOUNT_MODE="Standalone"
 fi
 
-# UI Banner
 echo "###################################"
 echo " 👀 $(padh "name" "$MODPATH/module.prop")"
 echo " 🌟 Made By $(padh "author" "$MODPATH/module.prop")"
@@ -78,24 +70,20 @@ echo "=================================================="
 echo " ⚡ Patching $jar_name (parallel dexlib2)..."
 echo "=================================================="
 
-# Default mode: ALLOW
 setprop persist.sys.sfs.screenshot true
 
-dalvikvm -Xmx512m -Djava.io.tmpdir="$MOD" -cp "$BIN/patcher.jar" build.bytes.sfs.SfsPatcher "$jar_path" "$MOD/$jar_name" || {
+dalvikvm -Xmx512m -Djava.io.tmpdir="$MOD" -cp "$BIN/sfs.jar" build.bytes.sfs.SfsPatcher "$jar_path" "$MOD/$jar_name" || {
   echo "💥 Dalvik patcher failed for $jar_name"
   exit 1
 }
 
-# Set permissions
 [ -f "$MODPATH/action.sh" ] && chmod 755 "$MODPATH/action.sh"
 [ -f "$MODPATH/service.sh" ] && chmod 755 "$MODPATH/service.sh"
 [ -f "$MODPATH/post-fs-data.sh" ] && chmod 755 "$MODPATH/post-fs-data.sh"
 
-# Cleanup installer files
 rm -f "$MODPATH/disable.sh"
 rm -rf "$BIN"
 
-# Clear dalvik-cache
 rm -rf /data/dalvik-cache/* 2>/dev/null
 
 echo
@@ -106,7 +94,7 @@ echo " 📝 Install Log: Auto-saved to /sdcard/Download"
 echo " ✨ All done! Please reboot your device now."
 echo "**************************************************"
 
-# Post install notification and redirect to Telegram channel
-notify "Simple Flag Secure" "Install done! Please reboot now. Join @BuildBytes for future projects that save your time & headache! 😊"
+notify "✨ INSTALLED • Simple Flag Secure" "Install done! Please reboot now. Join @BuildBytes for future projects that save your time & headache!"
 sleep 3
+am start -a android.intent.action.VIEW -d "tg://resolve?domain=BuildBytes" >/dev/null 2>&1 || \
 am start -a android.intent.action.VIEW -d https://telegram.me/BuildBytes >/dev/null 2>&1

@@ -4,35 +4,30 @@ MODDIR="${0%/*}"
 [ -d "$MODDIR" ] || MODDIR="/data/adb/modules/simple_flag_secure"
 LOG_FILE="$MODDIR/sfs_debug.log"
 
-LAST_MSG=""
 notify() {
     local TITLE="$1"
     local MSG="$2"
-    if [ "$MSG" != "$LAST_MSG" ]; then
-        local SAFE_MSG=$(printf '%b' "$MSG" | sed "s/'/'\\\\''/g")
-        su -lp 2000 -c "cmd notification post -S bigtext -t '$TITLE' 'Status' '$SAFE_MSG'" >/dev/null 2>&1
-        LAST_MSG="$MSG"
-    fi
+    local ICON="${3:-@android:drawable/ic_dialog_info}"
+    local TAG="${4:-SFS_BOOT}"
+    local SAFE_MSG=$(printf '%b' "$MSG" | sed "s/'/'\\\\''/g")
+    su 2000 -c "cmd notification post -i '$ICON' -t '$TITLE' -S bigtext '$TAG' '$SAFE_MSG'" >/dev/null 2>&1 || \
+    cmd notification post -i "$ICON" -t "$TITLE" -S bigtext "$TAG" "$SAFE_MSG" >/dev/null 2>&1
 }
 
 BASE_DESC="Bypasses screenshot restrictions and hides screenshot detection (A14+). Supports Magisk, KernelSU and APatch, no Zygisk, LSPosed or Meta Module required."
 
-# Wait for boot completion
 while [ "$(getprop sys.boot_completed)" != "1" ]; do
     sleep 2
 done
 
-# Wait for unlock
 count=0
 while [ ! -d "/storage/emulated/0" ] && [ "$count" -lt 30 ]; do
     sleep 2
     count=$((count + 1))
 done
 
-# Stabilize delay
 sleep 3
 
-# Root & mount mode detection
 ADBDIR="/data/adb"
 if [ -d "$ADBDIR/magisk" ] && magisk -V >/dev/null 2>&1; then
   ROOT="Magisk"
@@ -53,31 +48,30 @@ fi
 MOD_JAR="$MODDIR/system/framework/services.jar"
 SYS_JAR="/system/framework/services.jar"
 
-# Fast binary mount check
 if [ -f "$MOD_JAR" ] && cmp -s "$MOD_JAR" "$SYS_JAR" 2>/dev/null; then
     CURRENT=$(getprop persist.sys.sfs.screenshot)
 
     if [ "$CURRENT" = "false" ]; then
         STATUS="BLOCKED"
-        ICON="🔒"
+        ICON="❌"
+        NOTIF_ICON="@android:drawable/ic_menu_close_clear_cancel"
     else
         STATUS="ALLOWED"
-        ICON="🔓"
+        ICON="✅"
+        NOTIF_ICON="@android:drawable/ic_menu_view"
     fi
 
     sed -i "s#^description=.*#description=[ $ICON $STATUS ] $BASE_DESC#" "$MODDIR/module.prop" 2>/dev/null
 
-    # Boot mount notification
-    if [ "$MOUNT_MODE" = "Standalone" ]; then
-        notify "Simple Flag Secure" "Mounted (Standalone). No Meta-Module needed, but compatible with it! Screenshots unblocked."
+    if [ "$CURRENT" = "false" ]; then
+        NOTIF_BODY="Mounted ($MOUNT_MODE). Privacy Mode active: screenshots blocked everywhere."
     else
-        notify "Simple Flag Secure" "Mounted (Meta-Module). Screenshots unblocked everywhere!"
+        NOTIF_BODY="Mounted ($MOUNT_MODE). Screenshots and recordings allowed everywhere!"
     fi
+    notify "$ICON $STATUS • Simple Flag Secure" "$NOTIF_BODY" "$NOTIF_ICON" "SFS_BOOT"
 else
-    # Mount failed - trigger debug dump and alert user
     [ -f "$MODDIR/action.sh" ] && sh "$MODDIR/action.sh" debug
 
-    # Fallback log write if action.sh didn't generate log
     if [ ! -f "$LOG_FILE" ]; then
         {
             echo "=================================================="
@@ -99,13 +93,13 @@ else
             grep 'services.jar' /proc/mounts 2>/dev/null || echo "No bind mounts for services.jar found."
             echo
             echo "=================================================="
-            echo "Send this log to @BuildBytes on Telegram:"
-            echo "🔗 https://telegram.me/BuildBytes"
+            echo "Send this log to @BuildBytesDiscussion on Telegram:"
+            echo "🔗 https://telegram.me/BuildBytesDiscussion"
             echo "=================================================="
         } > "$LOG_FILE" 2>&1
         chmod 644 "$LOG_FILE" 2>/dev/null
     fi
 
     sed -i "s#^description=.*#description=[ ⚠️ NOT WORKING ] $BASE_DESC#" "$MODDIR/module.prop" 2>/dev/null
-    notify "Simple Flag Secure" "⚠️ Module isn't working: services.jar not mounted! Check sfs_debug.log in module folder."
+    notify "Simple Flag Secure" "⚠️ Module isn't working: services.jar not mounted! Check sfs_install.log." "@android:drawable/stat_sys_warning"
 fi
