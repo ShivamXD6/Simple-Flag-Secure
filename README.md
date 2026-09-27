@@ -124,8 +124,8 @@ Your support helps keep the project maintained and improve compatibility with ne
 - **[@Vikrant_R_Rajput](https://telegram.me/DeskAestheticx)**
   Tested the module on Samsung's OneUI Port Magisk.
 
-- **[@idral](https://telegram.me/DeskAestheticx/@idral)**
+- **[@idral](https://telegram.me/idral)**
   Tested the module without MetaModule for standalone mounting test.
 
-- **[@pocexa](https://telegram.me/DeskAestheticx/@pocexa)**
+- **[@pocexa](https://telegram.me/pocexa)**
   Tested the module on Poco X6 Pro for Screeenshot timeout issues.
