@@ -1,5 +1,5 @@
 # Simple Flag Secure
-
+   
 > 👀 Lightweight root module that disables FLAG_SECURE, enabling screenshots & screen recording in restricted apps. Hides screenshot detection on Android 14+. Includes a toggleable privacy mode to block screenshots system-wide. Supports Magisk, KernelSU, APatch & forks with no extra dependencies.
 
 [![Downloads](https://img.shields.io/github/downloads/ShivamXD6/Simple-Flag-Secure/total?color=green&style=for-the-badge)](https://github.com/ShivamXD6/Simple-Flag-Secure/releases/latest)
@@ -58,8 +58,8 @@ Removing screenshot restrictions is straightforward:
 1. **Install the Module**
    Open your Magisk, KernelSU, or APatch manager → **Modules** → **Install from storage** → Select the **Simple Flag Secure** ZIP.
 
-   > [!NOTE]
-   > **For ReSuKiSU / KernelSU Users:** If your manager displays a warning saying _"This module requires a meta-module to mount"_, you can **safely ignore it**. Simple Flag Secure has built-in standalone mounting (`post-fs-data.sh`) and does **not** need any meta-module (such as NoMount, Mountify, or Hybrid Mount). In fact, running SFS standalone avoids filesystem mount leaks, keeping your banking apps from detecting root!
+> [!NOTE]
+> **For ReSuKiSU / KernelSU Users:** If your manager displays a warning saying _"This module requires a meta-module to mount"_, you can **safely ignore it**. Simple Flag Secure has built-in standalone mounting (`post-fs-data.sh`) and does **not** need any meta-module (such as NoMount, Mountify, or Hybrid Mount). In fact, running SFS standalone avoids filesystem mount leaks, keeping your banking apps from detecting root!
 
 2. **Automatic Installation Logs**
    Installation logs are **automatically saved** to `/sdcard/Download/sfs_install.log` (and inside the module folder). No need to manually press the save button!
