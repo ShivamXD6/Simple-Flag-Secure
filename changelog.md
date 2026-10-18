@@ -17,7 +17,7 @@
 ### ⚡ [v9] Zygisk Edition (RAM-Only / In-Memory)
 - 🥷 **Smart Per-App Hooking**:
   - Automatically bypasses restrictions inside apps while staying completely hidden.
-  - Keeps banking and payment apps safe: add them to your DenyList or Umount list and screenshots will still work everywhere!
+  - If a stubborn app still blocks screenshots, simply turn off DenyList / Umount / Exclude Modifications for that app so the direct in-app hook attaches!
 - ⚡ **Recommended Setup**: Works best with **Zygisk Next** or **ReZygisk** (fixes issues on Xiaomi, OnePlus, and Samsung ROMs).
 - 🪶 **Zero File Changes**: Keeps your system 100% clean—nothing modified on disk. Download size is only **~19 KB**.
 

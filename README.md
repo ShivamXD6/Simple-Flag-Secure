@@ -83,7 +83,7 @@ If your device is not rooted (or you prefer not to touch root hooks), you can us
 
 1. **Download & Install**:
    - Install the latest **[JingMatrix LSPatch release](https://github.com/JingMatrix/LSPatch/releases)** APK on your device.
-   - Download `Simple_Flag_Secure_LSPatch_v8.0.apk` from [Releases](https://github.com/ShivamXD6/Simple-Flag-Secure/releases/latest).
+   - Download `Simple_Flag_Secure_LSPatch_v10.0.apk` from [Releases](https://github.com/ShivamXD6/Simple-Flag-Secure/releases/latest).
 2. **Open LSPatch**:
    - Open LSPatch and grant the requested storage permissions.
    - Go to the **Manage** tab → Tap the `+` button → Select **New Patch**.
@@ -91,7 +91,7 @@ If your device is not rooted (or you prefer not to touch root hooks), you can us
    - Choose the application where screenshots are blocked (either from installed apps or by picking an APK file directly).
 4. **Embed Simple Flag Secure**:
    - Choose **Portable Mode** (embeds module directly so LSPatch app isn't needed later).
-   - Under **Embed modules**, tap `+` and choose the downloaded `Simple_Flag_Secure_LSPatch_v8.0.apk`.
+   - Under **Embed modules**, tap `+` and choose the downloaded `Simple_Flag_Secure_LSPatch_v10.0.apk`.
 5. **Start Patching**:
    - Tap **Start Patching**. LSPatch will recompile and resign the target APK.
 6. **Install the Patched App**:
@@ -115,7 +115,7 @@ If the module reports `NOT WORKING` or screenshots are not unlocking on your set
 
 1. **Switch to Zygisk Next**: Even if you are using Magisk, installing **Zygisk Next** fixes issues on heavy skins like HyperOS, MIUI, and One UI.
 2. **Try ReZygisk latest pre-release**: Offers the newest compatibility updates.
-3. **Add the app to DenyList / Umount**: If an app still blocks screenshots, simply add it to your root manager's DenyList or Umount list and reboot. SFS is built to work even when apps are unmounted!
+3. **Turn off DenyList / Umount / Exclude Modifications**: If an app still blocks screenshots, make sure to **turn off DenyList** (Magisk / Zygisk Next), **turn off Umount** (KernelSU & forks), or **disable Exclude Modifications** (APatch & forks) for that specific app so the in-app Zygisk hook can attach and clear the flags directly!
 
 ---
 
@@ -159,10 +159,10 @@ Need to temporarily block screenshots and screen recordings for extra privacy? S
    - ⚡ `Simple_Flag_Secure_Zygisk_v10.0.zip` (for Zygisk users)
    - 🛡️ `Simple_Flag_Secure_v10.0.zip` (for Standalone users)
    - 📱 `Simple_Flag_Secure_LSPatch_v10.0.apk` (for Non-Root LSPatch / LSPosed users)
-2. **Flash in your Root Manager (Zygisk / Standalone):**
-   Open Magisk, KernelSU, or APatch manager → **Modules** → **Install from storage** → Select the ZIP.
-3. **Reboot** your device to activate the module.
-4. **Test:** Try taking a screenshot in an app that normally blocks it (e.g., Chrome Incognito).
+2. **Installation by Variant:**
+   - **For Zygisk & Standalone**: Flash the ZIP inside Magisk, KernelSU, or APatch manager → **Modules** → **Install from storage** → Reboot.
+   - **For Non-Root (LSPatch) & LSPosed**: Follow the dedicated [📱 LSPatch & LSPosed Setup Guide](#-non-root-users-lspatch-setup-guide) above to patch your target apps with zero root, or install and enable it inside your LSPosed manager!
+3. **Test:** Try taking a screenshot in an app that normally blocks it (e.g., Chrome Incognito).
 
 ---
 
