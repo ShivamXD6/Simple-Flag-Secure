@@ -194,6 +194,11 @@ If you find Simple Flag Secure useful and would like to support its development:
 
 ## 🙌 Credits
 
+- **[j-hc (ih8SecureLock)](https://github.com/j-hc/ih8SecureLock)** — For the in-app per-process `IPCThreadState` hook implementation concept.
+- **[Varun Date (Disable-FLAG_SECURE)](https://github.com/VarunS2002/Xposed-Disable-FLAG_SECURE)** — For the original Xposed hook implementation concept used in the LSPatch / LSPosed edition.
+- **[@dkvodao](https://telegram.me/dkvodao)** — Tested the Zygisk edition.
+- **[@PParker110](https://telegram.me/PParker110)** — Tested the Standalone edition with fixes on OxygenOS / ColorOS 14 (OnePlus 9 Pro).
+- **[@ShastikXD](https://telegram.me/ShastikXD)** (Dev) — Tested the Non-Root LSPatch edition.
 - **[ShirigiriPatil](https://telegram.me/BosadBillaHun)** — Tested the module on KernelSU.
 - **[LazyMeao](https://telegram.me/lazymeao)** & [@Black_luciferS](https://github.com/Blacklucifer82) — Tested on Realme UI 2.0 for compatibility and Toggle Action.
 - **[ShishirThakur](https://telegram.me/Shishirsthakur)** — Tested screenshot detection functionality on Android 14+.
