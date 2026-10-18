@@ -14,7 +14,7 @@ notify() {
     cmd notification post -i "$ICON" -t "$TITLE" -S bigtext "$TAG" "$SAFE_MSG" >/dev/null 2>&1
 }
 
-BASE_DESC="Bypasses screenshot restrictions and hides screenshot detection (A14+). Supports Magisk, KernelSU and APatch, no Zygisk, LSPosed or Meta Module required."
+BASE_DESC="Bypasses screenshot restrictions and hides screenshot detection."
 
 while [ "$(getprop sys.boot_completed)" != "1" ]; do
     sleep 2
@@ -45,7 +45,8 @@ else
   MOUNT_MODE="Standalone"
 fi
 
-MOD_JAR="$MODDIR/system/framework/services.jar"
+MOD_JAR="$MODDIR/services.jar"
+[ -f "$MOD_JAR" ] || MOD_JAR="$MODDIR/system/framework/services.jar"
 SYS_JAR="/system/framework/services.jar"
 
 if [ -f "$MOD_JAR" ] && cmp -s "$MOD_JAR" "$SYS_JAR" 2>/dev/null; then
@@ -70,36 +71,8 @@ if [ -f "$MOD_JAR" ] && cmp -s "$MOD_JAR" "$SYS_JAR" 2>/dev/null; then
     fi
     notify "$ICON $STATUS • Simple Flag Secure" "$NOTIF_BODY" "$NOTIF_ICON" "SFS_BOOT"
 else
-    [ -f "$MODDIR/action.sh" ] && sh "$MODDIR/action.sh" debug
-
-    if [ ! -f "$LOG_FILE" ]; then
-        {
-            echo "=================================================="
-            echo "       Simple Flag Secure - Diagnostic Log"
-            echo "=================================================="
-            echo "Time: $(date)"
-            echo "Device: $(getprop ro.product.brand) $(getprop ro.product.model)"
-            echo "Android: $(getprop ro.build.version.release) (SDK $(getprop ro.build.version.sdk))"
-            echo "Root Manager: $ROOT"
-            echo "Mount Mode: $MOUNT_MODE"
-            echo
-            echo "--- [Mount Check: FAILED] ---"
-            echo "Stock JAR:   $SYS_JAR"
-            echo "Module JAR:  $MOD_JAR"
-            echo "services.jar does not match module patched file!"
-            echo "KernelSU/APatch standalone mount or overlayfs failed to mount."
-            echo
-            echo "--- [Active Mounts] ---"
-            grep 'services.jar' /proc/mounts 2>/dev/null || echo "No bind mounts for services.jar found."
-            echo
-            echo "=================================================="
-            echo "Send this log to @BuildBytesDiscussion on Telegram:"
-            echo "🔗 https://telegram.me/BuildBytesDiscussion"
-            echo "=================================================="
-        } > "$LOG_FILE" 2>&1
-        chmod 644 "$LOG_FILE" 2>/dev/null
-    fi
+    [ -f "$MODDIR/action.sh" ] && sh "$MODDIR/action.sh" debug >/dev/null 2>&1 &
 
     sed -i "s#^description=.*#description=[ ⚠️ NOT WORKING ] $BASE_DESC#" "$MODDIR/module.prop" 2>/dev/null
-    notify "Simple Flag Secure" "⚠️ Module isn't working: services.jar not mounted! Check sfs_install.log." "@android:drawable/stat_sys_warning"
+    notify "Simple Flag Secure" "⚠️ Module isn't working: services.jar not mounted! Use Action button to export sfs.log." "@android:drawable/stat_sys_warning"
 fi

@@ -6,7 +6,7 @@ LOG_FILE="$MODDIR/sfs_debug.log"
 LOGCAT_PID_FILE="$MODDIR/.logcat.pid"
 LOGCAT_TMP="$MODDIR/.logcat_recording.tmp"
 
-BASE_DESC="Bypasses screenshot restrictions and hides screenshot detection (A14+). Supports Magisk, KernelSU and APatch, no Zygisk, LSPosed or Meta Module required."
+BASE_DESC="Bypasses screenshot restrictions and hides screenshot detection."
 
 notify() {
     local TITLE="$1"
@@ -28,7 +28,8 @@ else
     ROOT="Unknown"
 fi
 
-MOD_JAR="$MODDIR/system/framework/services.jar"
+MOD_JAR="$MODDIR/services.jar"
+[ -f "$MOD_JAR" ] || MOD_JAR="$MODDIR/system/framework/services.jar"
 SYS_JAR="/system/framework/services.jar"
 if [ -f "$MOD_JAR" ] && cmp -s "$MOD_JAR" "$SYS_JAR" 2>/dev/null; then
     MOUNT_OK=true
@@ -37,6 +38,22 @@ else
     MOUNT_OK=false
     MOUNT_LABEL="FAIL"
 fi
+
+update_module_desc() {
+    if [ "$MOUNT_OK" = "true" ]; then
+        local CUR=$(getprop persist.sys.sfs.screenshot)
+        local ST="ALLOWED"
+        local IC="✅"
+        if [ "$CUR" = "false" ]; then
+            ST="BLOCKED"
+            IC="❌"
+        fi
+        sed -i "s#^description=.*#description=[ $IC $ST ] $BASE_DESC#" "$MODDIR/module.prop" 2>/dev/null
+    else
+        sed -i "s#^description=.*#description=[ ⚠️ NOT WORKING ] $BASE_DESC#" "$MODDIR/module.prop" 2>/dev/null
+    fi
+}
+update_module_desc
 
 is_logging_active() {
     if [ -f "$LOGCAT_PID_FILE" ]; then
@@ -58,16 +75,12 @@ finalize_debug_log() {
     local DUMP_WIN=$(dumpsys window 2>/dev/null)
     local FOCUSED_PKG=$(echo "$DUMP_WIN" | grep -E 'mCurrentFocus|mFocusedApp' | grep -oE '[a-zA-Z0-9._]+/[a-zA-Z0-9._]+' | head -n 1 | cut -d/ -f1)
 
-    if [ ! -f "$LOGCAT_TMP" ]; then
-        logcat -d -t 3000 > "$LOGCAT_TMP" 2>/dev/null
-    else
-        logcat -d -t 300 >> "$LOGCAT_TMP" 2>/dev/null
+    if [ ! -f "$LOGCAT_TMP" ] || [ ! -s "$LOGCAT_TMP" ]; then
+        logcat -d -t 1500 > "$LOGCAT_TMP" 2>/dev/null
     fi
 
     {
-        echo "=================================================="
-        echo "       Simple Flag Secure - Diagnostic Log"
-        echo "=================================================="
+        echo "--- Simple Flag Secure - Diagnostic Log ---"
         echo "Time: $(date)"
         echo "Module Version: $(grep '^version=' "$MODDIR/module.prop" 2>/dev/null | cut -d= -f2)"
         echo "Device: $(getprop ro.product.brand) $(getprop ro.product.model) ($(getprop ro.product.device))"
@@ -75,8 +88,8 @@ finalize_debug_log() {
         echo "ROM Build: $(getprop ro.build.display.id)"
         echo "SELinux: $(getenforce 2>/dev/null)"
         echo "Root Manager: $ROOT"
-        echo
-        echo "--- [services.jar Mount Check] ---"
+        echo ""
+        echo "--- services.jar Mount Check ---"
         echo "Stock JAR:   $SYS_JAR"
         echo "Module JAR:  $MOD_JAR"
         if [ "$MOUNT_OK" = "true" ]; then
@@ -84,87 +97,120 @@ finalize_debug_log() {
         else
             echo "Mount Status: [FAIL] services.jar is NOT mounted or differs from module!"
         fi
-        echo
-        echo "--- [Active Mounts] ---"
+        echo ""
+        echo "--- Active Mounts ---"
         grep 'services.jar' /proc/mounts 2>/dev/null || echo "No direct bind mounts found for services.jar"
-        echo
-        echo "--- [SFS Properties] ---"
+        echo "--- SFS Properties ---"
         echo "persist.sys.sfs.screenshot: $(getprop persist.sys.sfs.screenshot)"
-        echo
-        echo "--- [Window Focus & Secure State] ---"
+        echo ""
+        echo "--- Window Focus & Secure State ---"
         echo "$DUMP_WIN" | grep -E 'mCurrentFocus|mFocusedApp' | head -n 5
-        dumpsys activity recents 2>/dev/null | grep -E 'Recent #[0-4]:' | head -n 5
         echo "$DUMP_WIN" | grep -iE 'mHasSecure|isSecure|FLAG_SECURE|canBeScreenshotTarget|notAllowCaptureDisplay|hasSecure|isAllowedDisableScreenshot|shouldBlockScreenCapture' | head -n 25
-        echo
-        echo "--- [Window Policy & Screenshot Strategies] ---"
-        dumpsys window policy 2>/dev/null | grep -iE 'screenshot|secure|Strategy|KeyCombination|mSafeMode|mSystemReady' | head -n 25
-        echo
+        echo ""
+        echo "--- Window Policy Details ---"
+        echo "$DUMP_WIN" | grep -iE 'screenshot|secure|Strategy|KeyCombination|mSafeMode|mSystemReady' | head -n 25
+        echo ""
 
         awk -v pkg="$FOCUSED_PKG" '
+        BEGIN {
+            MAX_CRIT = 50; MAX_ACT = 50; MAX_APP = 30; MAX_DEN = 20
+        }
         {
             line = $0
-            llow = tolower(line)
+            l = tolower(line)
 
-            if (llow ~ /capturedisplay|notallowcapturedisplay|isalloweddisablescreenshot|accessscreencontent|timed out waiting for screenshot|flag_secure|issecurelocked|hassecure|blackscreenshot|sensitivecontent|shouldblockscreencapture/) {
-                crit[cc++] = line
+            if (l ~ /capturedisplay|notallowcapturedisplay|isalloweddisablescreenshot|accessscreencontent|timed out waiting|flag_secure|issecurelocked|hassecure|blackscreenshot|sensitivecontent|shouldblockscreencapture/) {
+                crit[cc % MAX_CRIT] = line; cc++
+            } else if (l ~ /sfs|screenshot|globalscreenshot|screenshotcontroller|surfaceflinger.*capture/) {
+                act[ac % MAX_ACT] = line; ac++
             }
 
-            if (llow ~ /sfs|screenshot|globalscreenshot|screenshotcontroller|surfaceflinger.*capture/) {
-                act[ac++] = line
+            if (pkg != "" && index(line, pkg) > 0 && l ~ /window|secure|capture|screenshot|surface|flags|block|denied/) {
+                app[apc % MAX_APP] = line; apc++
             }
 
-            if (pkg != "" && index(line, pkg) > 0) {
-                if (llow ~ /window|secure|capture|screenshot|surface|flags|block|denied|timeout|null/) {
-                    app[apc++] = line
-                }
-            }
-
-            if (llow ~ /avc:.*denied|sfs.*fatal|dex2oat.*services\.jar/) {
-                den[dc++] = line
+            if (l ~ /avc:.*denied|dex2oat.*services\.jar/) {
+                den[dc % MAX_DEN] = line; dc++
             }
         }
+        function print_ring(arr, total, max_sz, title) {
+            if (total == 0) return
+            print "--- " title " ---"
+            n = (total < max_sz) ? total : max_sz
+            s = (total < max_sz) ? 0 : (total % max_sz)
+            for (i = 0; i < n; i++) print arr[(s + i) % max_sz]
+            print ""
+        }
         END {
-            print "--- [Screenshot Decision & Gatekeeper Logs (Critical)] ---"
-            start = (cc > 60) ? cc - 60 : 0
-            for (i = start; i < cc; i++) print crit[i]
-            print ""
-
-            print "--- [Live Recorded Screenshot Activity (Context)] ---"
-            start = (ac > 60) ? ac - 60 : 0
-            for (i = start; i < ac; i++) print act[i]
-            print ""
-
-            if (pkg != "") {
-                print "--- [Logs for Focused App: " pkg "] ---"
-                start = (apc > 35) ? apc - 35 : 0
-                for (i = start; i < apc; i++) print app[i]
-                print ""
-            }
-
-            print "--- [System & SELinux Denials] ---"
-            start = (dc > 25) ? dc - 25 : 0
-            for (i = start; i < dc; i++) print den[i]
-            print ""
+            print_ring(crit, cc, MAX_CRIT, "Critical Screenshot Decision Logs")
+            print_ring(act, ac, MAX_ACT, "Screenshot Context & Actions")
+            if (pkg != "") print_ring(app, apc, MAX_APP, "Focused App Logs: " pkg)
+            print_ring(den, dc, MAX_DEN, "SELinux & System Denials")
         }
         ' "$LOGCAT_TMP" 2>/dev/null
 
-        echo "=================================================="
-        echo "Send this sfs_debug.log AND services.jar from Downloads to:"
-        echo "👥 @BuildBytesDiscussion on Telegram"
-        echo "🔗 https://telegram.me/BuildBytesDiscussion"
-        echo "=================================================="
+        echo "--- Support ---"
+        echo "Telegram: @BuildBytesDiscussion (https://telegram.me/BuildBytesDiscussion)"
     } > "$LOG_FILE" 2>&1
     chmod 644 "$LOG_FILE" 2>/dev/null
     rm -f "$LOGCAT_TMP"
 
-    local SAVED_PATH=""
+    # Export report
+    local MERGED_LOG="$MODDIR/sfs.log"
+    {
+        echo "=== Simple Flag Secure - Unified Log Report ==="
+        echo "Generated: $(date)"
+        echo "Version: $(grep '^version=' "$MODDIR/module.prop" 2>/dev/null | cut -d= -f2)"
+        echo "Device: $(getprop ro.product.brand) $(getprop ro.product.model) ($(getprop ro.product.device))"
+        echo "Android: $(getprop ro.build.version.release) (SDK $(getprop ro.build.version.sdk))"
+        echo "Root Manager: $ROOT"
+        echo ""
+
+        echo "--- Section 1: Installation Log (sfs_install.log) ---"
+        if [ -f "$MODDIR/sfs_install.log" ]; then
+            cat "$MODDIR/sfs_install.log"
+        else
+            echo "sfs_install.log not found."
+        fi
+        echo ""
+
+        echo "--- Section 2: Reboot / Mount Log (sfs_reboot.log) ---"
+        if [ -f "$MODDIR/sfs_reboot.log" ]; then
+            cat "$MODDIR/sfs_reboot.log"
+        elif [ -f "$MODDIR/post-fs-data.log" ]; then
+            cat "$MODDIR/post-fs-data.log"
+        else
+            echo "sfs_reboot.log not found."
+        fi
+        echo ""
+
+        echo "--- Section 3: Diagnostic Log (sfs_debug.log) ---"
+        cat "$LOG_FILE" 2>/dev/null || echo "sfs_debug.log not found."
+        echo ""
+    } > "$MERGED_LOG" 2>&1
+    chmod 644 "$MERGED_LOG" 2>/dev/null
+
+    local TARGET_JAR="$SYS_JAR"
+    [ -f "$TARGET_JAR" ] || TARGET_JAR="$MOD_JAR"
+
+    # Package archive
+    local STAGE_DIR="/data/local/tmp/.sfs_stage_$$"
+    local REPORT_PKG="/data/local/tmp/sfs_report.tar.gz"
+    rm -rf "$STAGE_DIR" "$REPORT_PKG" 2>/dev/null
+    mkdir -p "$STAGE_DIR" 2>/dev/null
+    cp -f "$MERGED_LOG" "$STAGE_DIR/sfs.log" 2>/dev/null
+    [ -f "$TARGET_JAR" ] && cp -f "$TARGET_JAR" "$STAGE_DIR/services.jar" 2>/dev/null
+
+    ( cd "$STAGE_DIR" && tar -cf - * 2>/dev/null | gzip -1 > "$REPORT_PKG" ) 2>/dev/null || \
+    ( cd "$STAGE_DIR" && tar -czf "$REPORT_PKG" * 2>/dev/null )
+    rm -rf "$STAGE_DIR" 2>/dev/null
+
     for d in "/sdcard/Download" "/storage/emulated/0/Download" "/sdcard" "/storage/emulated/0"; do
         if [ -d "$d" ]; then
-            cp -f "$LOG_FILE" "$d/sfs_debug.log" 2>/dev/null
-            chmod 666 "$d/sfs_debug.log" 2>/dev/null
-            SAVED_PATH="$d/sfs_debug.log"
-            cp -f "$SYS_JAR" "$d/services.jar" 2>/dev/null
-            chmod 666 "$d/services.jar" 2>/dev/null
+            cp -f "$REPORT_PKG" "$d/sfs_report.tar.gz" 2>/dev/null
+            chmod 666 "$d/sfs_report.tar.gz" 2>/dev/null
+            cp -f "$MERGED_LOG" "$d/sfs.log" 2>/dev/null
+            chmod 666 "$d/sfs.log" 2>/dev/null
             break
         fi
     done
@@ -172,17 +218,32 @@ finalize_debug_log() {
     echo "=================================================="
     echo "       Simple Flag Secure - Log Saved"
     echo "=================================================="
-    echo "  ✅ Debug sfs_debug.log & services.jar saved successfully!"
+    echo "  ✅ Unified sfs_report.tar.gz created successfully!"
     echo "  📁 Saved to Downloads folder:"
-    echo "     • sfs_debug.log"
-    echo "     • services.jar"
-    echo "  👉 Please share BOTH files to @BuildBytesDiscussion"
+    echo "     • sfs_report.tar.gz (sfs.log + services.jar)"
+    echo "     • sfs.log"
+    echo "  👉 Please share sfs_report.tar.gz to @BuildBytesDiscussion"
     echo "=================================================="
 
-    notify "✅ LOG SAVED • Simple Flag Secure" "sfs_debug.log & services.jar saved to Downloads! Please share BOTH files to @BuildBytesDiscussion." "@android:drawable/ic_menu_save" "SFS_STATUS"
+    # Dispatch intent
+    send_bugreport() {
+        local PKG_SRC="$1"
+        local BUGREPORT_DIR="/data/user_de/0/com.android.shell/files/bugreports"
+        mkdir -p "$BUGREPORT_DIR" 2>/dev/null
 
-    ( am start -a android.intent.action.VIEW -d "tg://resolve?domain=BuildBytesDiscussion" 2>/dev/null || \
-      am start -a android.intent.action.VIEW -d https://telegram.me/BuildBytesDiscussion 2>/dev/null ) >/dev/null 2>&1 &
+        cp -f "$PKG_SRC" "$BUGREPORT_DIR/sfs_report.tar.gz" 2>/dev/null
+        chmod 666 "$BUGREPORT_DIR/sfs_report.tar.gz" 2>/dev/null
+        chown 2000:2000 "$BUGREPORT_DIR/sfs_report.tar.gz" 2>/dev/null
+        chcon u:object_r:shell_data_file:s0 "$BUGREPORT_DIR/sfs_report.tar.gz" 2>/dev/null
+        rm -f "$PKG_SRC" 2>/dev/null
+
+        su 2000 -c "am start -a android.intent.action.SEND --eu android.intent.extra.STREAM content://com.android.shell/bugreports/sfs_report.tar.gz -t '*/*' --grant-read-uri-permission" >/dev/null 2>&1 || \
+        am start -a android.intent.action.SEND --eu android.intent.extra.STREAM content://com.android.shell/bugreports/sfs_report.tar.gz -t '*/*' --grant-read-uri-permission >/dev/null 2>&1
+
+        notify "📤 Share to @BuildBytesDiscussion" "Please send sfs_report.tar.gz to @BuildBytesDiscussion group!" "@android:drawable/ic_dialog_info" "SFS_STATUS"
+    }
+
+    ( send_bugreport "$REPORT_PKG" ) >/dev/null 2>&1 &
 }
 
 start_debug_logging() {
@@ -258,19 +319,6 @@ case "$1" in
     ;;
 esac
 
-if [ "$MOUNT_OK" != "true" ]; then
-    sed -i "s#^description=.*#description=[ ⚠️ NOT WORKING ] $BASE_DESC#" "$MODDIR/module.prop" 2>/dev/null
-    echo "=================================================="
-    echo "        Simple Flag Secure - Action"
-    echo "=================================================="
-    echo "  ❌ Mount Error: services.jar is NOT mounted!"
-    echo "  Cannot toggle modes while module is inactive."
-    echo "  Help: https://telegram.me/BuildBytesDiscussion"
-    echo "=================================================="
-    notify "Simple Flag Secure" "❌ services.jar is not mounted! Module is inactive."
-    exit 1
-fi
-
 TARGET=""
 case "$1" in
   allow|ALLOW|true|1) TARGET="true" ;;
@@ -282,6 +330,10 @@ case "$1" in
 esac
 
 if [ -z "$TARGET" ]; then
+    if [ "$MOUNT_OK" != "true" ]; then
+        notify "⚠️ Warning • Simple Flag Secure" "services.jar not mounted! Use Vol - to export logs." "@android:drawable/ic_dialog_alert" "SFS_WARN"
+    fi
+
     CURRENT=$(getprop persist.sys.sfs.screenshot)
     if [ "$CURRENT" = "false" ]; then
         CUR_STATUS="[ ❌ BLOCKED ]"
@@ -295,7 +347,12 @@ if [ -z "$TARGET" ]; then
     echo "        Simple Flag Secure - Action Menu"
     echo "=================================================="
     echo "  Current Mode: $CUR_STATUS"
-    echo "  Mount Status: ✅ OK"
+    if [ "$MOUNT_OK" = "true" ]; then
+        echo "  Mount Status: ✅ OK"
+    else
+        echo "  Mount Status: ⚠️ FAIL"
+        echo "  ⚠️ Warning: services.jar not mounted! Press [Vol -] to export logs."
+    fi
     echo "--------------------------------------------------"
     echo "  👉 Press a Volume Button within 30s:"
     echo "  [Vol +]  $VOL_UP_TEXT"
@@ -351,24 +408,36 @@ else
 fi
 
 setprop persist.sys.sfs.screenshot "$TARGET"
-sed -i "s#^description=.*#description=[ $ICON $STATUS ] $BASE_DESC#" "$MODDIR/module.prop" 2>/dev/null
+setprop persist.wm.debug.sfs.screenshot "$TARGET" 2>/dev/null
+
+if [ "$MOUNT_OK" != "true" ]; then
+    sed -i "s#^description=.*#description=[ ⚠️ NOT WORKING ] $BASE_DESC#" "$MODDIR/module.prop" 2>/dev/null
+else
+    sed -i "s#^description=.*#description=[ $ICON $STATUS ] $BASE_DESC#" "$MODDIR/module.prop" 2>/dev/null
+fi
 
 echo "=================================================="
 echo "        Simple Flag Secure - Action Toggle"
 echo "=================================================="
 echo "  Status: $ICON $STATUS"
-echo "  Mount:  ✅ OK"
+if [ "$MOUNT_OK" = "true" ]; then
+    echo "  Mount:  ✅ OK"
+else
+    echo "  Mount:  ⚠️ FAIL (services.jar not mounted)"
+    echo "  ⚠️ Warning: services.jar not mounted!"
+fi
 echo "  Prop:   persist.sys.sfs.screenshot = $TARGET"
 echo "  Help:   https://telegram.me/BuildBytesDiscussion"
 echo "--------------------------------------------------"
-echo "  💡 Tip: If any secure app was already open, swipe it"
-echo "     away from Recents & reopen to refresh its screen."
-echo "--------------------------------------------------"
-echo "  ⏳ Restarting SystemUI in 3 seconds to apply..."
+echo "  ⏳ Restarting SystemUI in 5 seconds to apply..."
 echo "  (Screen will reload briefly, don't panic! 😊)"
 echo "=================================================="
 
-notify "$ICON $STATUS • Simple Flag Secure" "Switched to $STATUS: $DESC. Restarting SystemUI in 3s..." "$NOTIF_ICON" "SFS_STATUS"
+if [ "$MOUNT_OK" != "true" ]; then
+    notify "⚠️ $STATUS • Simple Flag Secure" "⚠️ services.jar not mounted! Switched to $STATUS. Restarting SystemUI in 5s..." "@android:drawable/stat_notify_error" "SFS_STATUS"
+else
+    notify "$ICON $STATUS • Simple Flag Secure" "Switched to $STATUS: $DESC. Restarting SystemUI in 5s..." "$NOTIF_ICON" "SFS_STATUS"
+fi
 
-sleep 3
+sleep 5
 killall com.android.systemui 2>/dev/null || pkill -f com.android.systemui 2>/dev/null || kill -9 $(pidof com.android.systemui) 2>/dev/null

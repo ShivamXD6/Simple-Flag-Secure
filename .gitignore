@@ -4,3 +4,16 @@
 patcher_src/bin/
 *.dex
 *.log
+*.zip
+*.apk
+*.idsig
+*.png
+*.bat
+services.jar
+zygisk_src/libs/
+zygisk_src/obj/
+xposed_module/build/
+*.keystore
+test_xposed_api.jar
+__pycache__/
+*.pyc

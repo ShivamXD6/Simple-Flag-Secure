@@ -47,9 +47,6 @@ echo " 🌟 Made By $(padh "author" "$MODPATH/module.prop")"
 echo " ⚡ Version - $(padh "version" "$MODPATH/module.prop")"
 echo " 💻 Architecture - $ARCH"
 echo " 📂 Mounted: $MOUNT_MODE"
-if [ "$MOUNT_MODE" = "Standalone" ]; then
-  echo " ℹ️ Notice: Standalone mode (No Meta-Module required, but compatible)"
-fi
 echo "###################################"
 echo
 
@@ -84,17 +81,24 @@ dalvikvm -Xmx512m -Djava.io.tmpdir="$MOD" -cp "$BIN/sfs.jar" build.bytes.sfs.Sfs
 rm -f "$MODPATH/disable.sh"
 rm -rf "$BIN"
 
+if [ "$ROOT" != "Magisk" ] && [ "$MOUNT_MODE" != "Meta-Module" ]; then
+  mv "$MOD/$jar_name" "$MODPATH/$jar_name"
+  rm -rf "$MODPATH/system"
+fi
+
 rm -rf /data/dalvik-cache/* 2>/dev/null
 
 echo
 echo "**************************************************"
-echo " 🎛️ Action Button: Enabled in Magisk/KSU/APatch"
-echo " 🔄 You can toggle mode anytime via Action button"
-echo " 📝 Install Log: Auto-saved to /sdcard/Download"
+echo " 🎛️ Allowed mode applied, Privacy mode is also available"
+echo " 🔄 You can toggle modes anytime via Action button"
 echo " ✨ All done! Please reboot your device now."
 echo "**************************************************"
 
-notify "✨ INSTALLED • Simple Flag Secure" "Install done! Please reboot now. Join @BuildBytes for future projects that save your time & headache!"
-sleep 3
-am start -a android.intent.action.VIEW -d "tg://resolve?domain=BuildBytes" >/dev/null 2>&1 || \
-am start -a android.intent.action.VIEW -d https://telegram.me/BuildBytes >/dev/null 2>&1
+MARKER_FILE="/data/adb/.buildbytes"
+if [ ! -f "$MARKER_FILE" ]; then
+    touch "$MARKER_FILE" 2>/dev/null
+    sleep 3
+    am start -a android.intent.action.VIEW -d "tg://resolve?domain=BuildBytes" >/dev/null 2>&1 || \
+    am start -a android.intent.action.VIEW -d https://telegram.me/BuildBytes >/dev/null 2>&1
+fi

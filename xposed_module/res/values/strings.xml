@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Simple Flag Secure</string>
+    <string name="xposed_description">Bypasses screenshot restrictions and hides screenshot detection (A14+) by @ShivamXD6 (aka @ShastikXD)</string>
+</resources>

@@ -22,12 +22,16 @@ import com.android.tools.smali.dexlib2.immutable.ImmutableMethodImplementation;
 import com.android.tools.smali.dexlib2.immutable.instruction.ImmutableInstruction10x;
 import com.android.tools.smali.dexlib2.immutable.instruction.ImmutableInstruction11n;
 import com.android.tools.smali.dexlib2.immutable.instruction.ImmutableInstruction11x;
+import com.android.tools.smali.dexlib2.immutable.instruction.ImmutableInstruction12x;
 import com.android.tools.smali.dexlib2.immutable.instruction.ImmutableInstruction21c;
 import com.android.tools.smali.dexlib2.immutable.instruction.ImmutableInstruction21s;
 import com.android.tools.smali.dexlib2.immutable.instruction.ImmutableInstruction21t;
 import com.android.tools.smali.dexlib2.immutable.instruction.ImmutableInstruction22b;
+import com.android.tools.smali.dexlib2.immutable.instruction.ImmutableInstruction22c;
+import com.android.tools.smali.dexlib2.immutable.instruction.ImmutableInstruction23x;
 import com.android.tools.smali.dexlib2.immutable.instruction.ImmutableInstruction35c;
 import com.android.tools.smali.dexlib2.immutable.instruction.ImmutableInstruction3rc;
+import com.android.tools.smali.dexlib2.immutable.reference.ImmutableFieldReference;
 import com.android.tools.smali.dexlib2.immutable.reference.ImmutableMethodReference;
 import com.android.tools.smali.dexlib2.immutable.reference.ImmutableStringReference;
 import com.android.tools.smali.dexlib2.immutable.reference.ImmutableTypeReference;
@@ -66,6 +70,7 @@ public class SfsPatcher {
     public enum PatchAction {
         RETURN_TRUE,
         RETURN_FALSE,
+        RETURN_VOID,
         RETURN_LIST,
         DYNAMIC_PROP_DIRECT,
         DYNAMIC_PROP_INVERT
@@ -74,16 +79,19 @@ public class SfsPatcher {
     private static final Map<String, PatchAction> SERVICES_PRESET = new HashMap<>();
 
     static {
-        // Patch rules with dynamic toggle
-        SERVICES_PRESET.put("isSecureLocked", PatchAction.DYNAMIC_PROP_INVERT);          // WindowState
-        SERVICES_PRESET.put("hasSecureWindowOnScreen", PatchAction.DYNAMIC_PROP_INVERT); // DisplayContent
-        SERVICES_PRESET.put("notifyScreenshotListeners", PatchAction.RETURN_LIST);       // A14+ Anti-detection
-        SERVICES_PRESET.put("canBeScreenshotTarget", PatchAction.DYNAMIC_PROP_DIRECT);   // RootWindowContainer
-        SERVICES_PRESET.put("notAllowCaptureDisplay", PatchAction.DYNAMIC_PROP_INVERT);  // Xiaomi HyperOS/MIUI Stub
-        SERVICES_PRESET.put("accessScreenContentEnable", PatchAction.RETURN_TRUE);       // Xiaomi HyperOS/MIUI Stub
-        SERVICES_PRESET.put("hasSecure", PatchAction.DYNAMIC_PROP_INVERT);               // OPPO/OnePlus/Realme
-        SERVICES_PRESET.put("shouldBlockScreenCaptureForApp", PatchAction.RETURN_FALSE);  // Android 15/16: Suppress irritating screen share security toast
-        SERVICES_PRESET.put("isAllowedDisableScreenshot", PatchAction.DYNAMIC_PROP_INVERT);     // Xiaomi HyperOS WindowStateAnimator
+        SERVICES_PRESET.put("isSecureLocked", PatchAction.DYNAMIC_PROP_INVERT);
+        SERVICES_PRESET.put("hasSecureWindowOnScreen", PatchAction.DYNAMIC_PROP_INVERT);
+        SERVICES_PRESET.put("notifyScreenshotListeners", PatchAction.RETURN_LIST);
+        SERVICES_PRESET.put("registerScreenCaptureObserver", PatchAction.RETURN_VOID);
+        SERVICES_PRESET.put("registerScreenRecordingCallback", PatchAction.RETURN_FALSE);
+        SERVICES_PRESET.put("containsSecureLayers", PatchAction.RETURN_FALSE);
+        SERVICES_PRESET.put("canBeScreenshotTarget", PatchAction.DYNAMIC_PROP_DIRECT);
+        SERVICES_PRESET.put("notAllowCaptureDisplay", PatchAction.DYNAMIC_PROP_INVERT);
+        SERVICES_PRESET.put("accessScreenContentEnable", PatchAction.RETURN_TRUE);
+        SERVICES_PRESET.put("hasSecure", PatchAction.DYNAMIC_PROP_INVERT);
+        SERVICES_PRESET.put("shouldBlockScreenCaptureForApp", PatchAction.RETURN_FALSE);
+        SERVICES_PRESET.put("isAllowedDisableScreenshot", PatchAction.DYNAMIC_PROP_INVERT);
+        SERVICES_PRESET.put("isScreenshotAllowedByPolicy", PatchAction.DYNAMIC_PROP_DIRECT);
     }
 
     public static void main(String[] args) {
@@ -142,6 +150,7 @@ public class SfsPatcher {
                 for (ClassDef classDef : origDex.getClasses()) {
                     String classType = classDef.getType();
                     if (!classType.startsWith("Lcom/android/server/") &&
+                        !classType.startsWith("Landroid/") &&
                         !classType.startsWith("Lcom/miui/") &&
                         !classType.startsWith("Lcom/oplus/") &&
                         !classType.startsWith("Lcom/samsung/")) {
@@ -161,7 +170,13 @@ public class SfsPatcher {
                                 if (inst instanceof ReferenceInstruction) {
                                     Object ref = ((ReferenceInstruction) inst).getReference();
                                     if (ref instanceof MethodReference) {
-                                        if ("notAllowCaptureDisplay".equals(((MethodReference) ref).getName())) {
+                                        MethodReference mr = (MethodReference) ref;
+                                        if ("notAllowCaptureDisplay".equals(mr.getName())) {
+                                            targetClasses.add(classType);
+                                            break;
+                                        }
+                                        if ("copyFrom".equals(mr.getName()) &&
+                                            "Landroid/view/WindowManager$LayoutParams;".equals(mr.getDefiningClass())) {
                                             targetClasses.add(classType);
                                             break;
                                         }
@@ -192,12 +207,13 @@ public class SfsPatcher {
                                 MethodReference captureTargetRef = null;
                                 Opcode origCaptureInvokeOp = Opcode.INVOKE_INTERFACE;
 
+                                boolean needsCopyFromHelper = false;
+
                                 List<Method> rewrittenMethods = new ArrayList<>();
                                 for (Method method : classDef.getMethods()) {
                                     String name = method.getName();
                                     String definingClass = method.getDefiningClass();
 
-                                    // Fix Android 14/15 Java Record ART verification errors
                                     if (recordClasses.contains(definingClass) &&
                                         ("equals".equals(name) || "hashCode".equals(name) || "toString".equals(name))) {
                                         MethodImplementation fixedImpl = buildRecordImplementation(method);
@@ -279,7 +295,6 @@ public class SfsPatcher {
                                         continue;
                                     }
 
-                                    // Intercept invocations of notAllowCaptureDisplay inside caller methods (e.g. WindowManagerService.captureDisplay)
                                     MethodImplementation impl = method.getImplementation();
                                     if (impl != null) {
                                         boolean methodChanged = false;
@@ -330,6 +345,41 @@ public class SfsPatcher {
                                                             needsCaptureHelper = true;
                                                             continue;
                                                         }
+                                                    } else if ("copyFrom".equals(mr.getName()) &&
+                                                               "Landroid/view/WindowManager$LayoutParams;".equals(mr.getDefiningClass())) {
+                                                        ImmutableMethodReference sfsCopyRef = new ImmutableMethodReference(
+                                                                definingClass,
+                                                                "sfs$copyFrom",
+                                                                Arrays.asList("Landroid/view/WindowManager$LayoutParams;", "Landroid/view/WindowManager$LayoutParams;"),
+                                                                "I"
+                                                        );
+                                                        if (inst instanceof FiveRegisterInstruction) {
+                                                            FiveRegisterInstruction fri = (FiveRegisterInstruction) inst;
+                                                            newInstructions.add(new ImmutableInstruction35c(
+                                                                    Opcode.INVOKE_STATIC,
+                                                                    fri.getRegisterCount(),
+                                                                    fri.getRegisterC(),
+                                                                    fri.getRegisterD(),
+                                                                    fri.getRegisterE(),
+                                                                    fri.getRegisterF(),
+                                                                    fri.getRegisterG(),
+                                                                    sfsCopyRef
+                                                            ));
+                                                            methodChanged = true;
+                                                            needsCopyFromHelper = true;
+                                                            continue;
+                                                        } else if (inst instanceof RegisterRangeInstruction) {
+                                                            RegisterRangeInstruction rri = (RegisterRangeInstruction) inst;
+                                                            newInstructions.add(new ImmutableInstruction3rc(
+                                                                    Opcode.INVOKE_STATIC_RANGE,
+                                                                    rri.getStartRegister(),
+                                                                    rri.getRegisterCount(),
+                                                                    sfsCopyRef
+                                                            ));
+                                                            methodChanged = true;
+                                                            needsCopyFromHelper = true;
+                                                            continue;
+                                                        }
                                                     }
                                                 }
                                             }
@@ -353,7 +403,7 @@ public class SfsPatcher {
                                                     method.getHiddenApiRestrictions(),
                                                     newImpl
                                             ));
-                                            String log = entryName + " -> " + definingClass + "->" + name + "() [INTERCEPT_CAPTURE_DISPLAY]";
+                                            String log = entryName + " -> " + definingClass + "->" + name + "() [INTERCEPT_CALLS]";
                                             synchronized (System.out) {
                                                 System.out.println("   ✓ " + log);
                                             }
@@ -369,6 +419,16 @@ public class SfsPatcher {
                                     Method helper = createSfsNotAllowCaptureDisplayMethod(type, captureTargetRef, origCaptureInvokeOp);
                                     rewrittenMethods.add(helper);
                                     String log = entryName + " -> " + type + "->sfs$notAllowCaptureDisplay() [HELPER_ADDED]";
+                                    synchronized (System.out) {
+                                        System.out.println("   ✓ " + log);
+                                    }
+                                    patchedDetails.add(log);
+                                }
+
+                                if (needsCopyFromHelper) {
+                                    Method helper = createSfsCopyFromMethod(type);
+                                    rewrittenMethods.add(helper);
+                                    String log = entryName + " -> " + type + "->sfs$copyFrom() [HELPER_ADDED]";
                                     synchronized (System.out) {
                                         System.out.println("   ✓ " + log);
                                     }
@@ -420,6 +480,24 @@ public class SfsPatcher {
             outputFile.getParentFile().mkdirs();
         }
 
+        // Group modified DEX files by base zip entry name (e.g. "classes.dex/1" -> "classes.dex")
+        Map<String, Map<Integer, File>> containerMods = new HashMap<>();
+        Map<String, File> standaloneMods = new HashMap<>();
+
+        for (Map.Entry<String, File> mod : modifiedDexFiles.entrySet()) {
+            String key = mod.getKey();
+            int slashIdx = key.indexOf('/');
+            if (slashIdx != -1) {
+                String baseZipName = key.substring(0, slashIdx);
+                int subIndex = Integer.parseInt(key.substring(slashIdx + 1));
+                containerMods.computeIfAbsent(baseZipName, k -> new HashMap<>()).put(subIndex, mod.getValue());
+            } else {
+                standaloneMods.put(key, mod.getValue());
+            }
+        }
+
+        Set<String> writtenEntries = new HashSet<>();
+
         try (ZipFile zipIn = new ZipFile(inputFile);
              ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(outputFile), 65536))) {
 
@@ -429,17 +507,52 @@ public class SfsPatcher {
                 ZipEntry entry = entries.nextElement();
                 String name = entry.getName();
 
-                if (modifiedDexFiles.containsKey(name)) {
-                    File patchedDex = modifiedDexFiles.get(name);
-                    ZipEntry newEntry = new ZipEntry(name);
-                    newEntry.setTime(System.currentTimeMillis());
-                    zos.putNextEntry(newEntry);
-                    try (InputStream fis = new BufferedInputStream(new FileInputStream(patchedDex), 65536)) {
-                        copyStream(fis, zos);
+                if (containerMods.containsKey(name)) {
+                    // Container (e.g. classes.dex with subdexes): unbundle to standard Multi-DEX
+                    Map<Integer, File> modMap = containerMods.get(name);
+                    List<String> subEntryNames = new ArrayList<>();
+                    for (String en : entryNames) {
+                        if (en.startsWith(name + "/")) {
+                            subEntryNames.add(en);
+                        }
                     }
-                    zos.closeEntry();
+                    subEntryNames.sort((a, b) -> {
+                        int idxA = Integer.parseInt(a.substring(name.length() + 1));
+                        int idxB = Integer.parseInt(b.substring(name.length() + 1));
+                        return Integer.compare(idxA, idxB);
+                    });
+
+                    for (String subName : subEntryNames) {
+                        int subIndex = Integer.parseInt(subName.substring(name.length() + 1));
+                        String targetDexName = (subIndex == 0) ? name : name.replace(".dex", (subIndex + 1) + ".dex");
+
+                        File dexToStore;
+                        boolean deleteAfter = false;
+                        if (modMap.containsKey(subIndex)) {
+                            dexToStore = modMap.get(subIndex);
+                            deleteAfter = true;
+                        } else {
+                            dexToStore = File.createTempFile("sfs_sub_" + subIndex + "_", ".dex", tempDir);
+                            deleteAfter = true;
+                            DexFile subDex = container.getEntry(subName).getDexFile();
+                            DexFileFactory.writeDexFile(dexToStore.getAbsolutePath(), subDex);
+                        }
+
+                        writeStoredEntry(zos, targetDexName, dexToStore);
+                        writtenEntries.add(targetDexName);
+                        if (deleteAfter) {
+                            dexToStore.delete();
+                        }
+                    }
+                } else if (standaloneMods.containsKey(name)) {
+                    File patchedDex = standaloneMods.get(name);
+                    writeStoredEntry(zos, name, patchedDex);
+                    writtenEntries.add(name);
                     patchedDex.delete();
                 } else {
+                    if (writtenEntries.contains(name)) {
+                        continue;
+                    }
                     ZipEntry newEntry = new ZipEntry(name);
                     newEntry.setTime(entry.getTime());
                     if (entry.getMethod() == ZipEntry.STORED) {
@@ -453,6 +566,7 @@ public class SfsPatcher {
                         copyStream(is, zos);
                     }
                     zos.closeEntry();
+                    writtenEntries.add(name);
                 }
             }
         } finally {
@@ -465,6 +579,29 @@ public class SfsPatcher {
         System.out.println("⏱️ Repack completed in " + (repackDuration / 1000.0) + "s");
 
         return true;
+    }
+
+    private static void writeStoredEntry(ZipOutputStream zos, String name, File file) throws IOException {
+        ZipEntry entry = new ZipEntry(name);
+        entry.setMethod(ZipEntry.STORED);
+        entry.setSize(file.length());
+        entry.setCompressedSize(file.length());
+        entry.setTime(System.currentTimeMillis());
+
+        java.util.zip.CRC32 crc = new java.util.zip.CRC32();
+        try (InputStream fis = new BufferedInputStream(new FileInputStream(file), 65536)) {
+            byte[] buf = new byte[65536];
+            int n;
+            while ((n = fis.read(buf)) != -1) {
+                crc.update(buf, 0, n);
+            }
+        }
+        entry.setCrc(crc.getValue());
+        zos.putNextEntry(entry);
+        try (InputStream fis = new BufferedInputStream(new FileInputStream(file), 65536)) {
+            copyStream(fis, zos);
+        }
+        zos.closeEntry();
     }
 
     private static int countParamRegisters(Method method) {
@@ -516,6 +653,8 @@ public class SfsPatcher {
             instructions.add(new ImmutableInstruction35c(Opcode.INVOKE_DIRECT, 1, 0, 0, 0, 0, 0,
                     new ImmutableMethodReference("Ljava/util/ArrayList;", "<init>", Collections.emptyList(), "V")));
             instructions.add(new ImmutableInstruction11x(Opcode.RETURN_OBJECT, 0));
+        } else if (action == PatchAction.RETURN_VOID || "V".equals(retType)) {
+            instructions.add(new ImmutableInstruction10x(Opcode.RETURN_VOID));
         } else {
             int val = (action == PatchAction.RETURN_TRUE) ? 1 : 0;
             if ("J".equals(retType) || "D".equals(retType)) {
@@ -538,7 +677,6 @@ public class SfsPatcher {
         int totalRegisters = Math.max(2, paramRegs + 2);
 
         List<Instruction> instructions = new ArrayList<>();
-        // Read property (default true)
         instructions.add(new ImmutableInstruction21c(Opcode.CONST_STRING, 0, new ImmutableStringReference("persist.sys.sfs.screenshot")));
         instructions.add(new ImmutableInstruction11n(Opcode.CONST_4, 1, 1));
         instructions.add(new ImmutableInstruction35c(Opcode.INVOKE_STATIC, 2, 0, 1, 0, 0, 0,
@@ -546,7 +684,6 @@ public class SfsPatcher {
         instructions.add(new ImmutableInstruction11x(Opcode.MOVE_RESULT, 0));
 
         if (invert) {
-            // Invert for block mode
             instructions.add(new ImmutableInstruction22b(Opcode.XOR_INT_LIT8, 0, 0, 1));
         }
 
@@ -617,23 +754,19 @@ public class SfsPatcher {
         int p0 = totalRegisters - paramRegs;
 
         List<InstItem> items = new ArrayList<>();
-        // Read property (default true)
         items.add(new RealInst(new ImmutableInstruction21c(Opcode.CONST_STRING, 0, new ImmutableStringReference("persist.sys.sfs.screenshot"))));
         items.add(new RealInst(new ImmutableInstruction11n(Opcode.CONST_4, 1, 1)));
         items.add(new RealInst(new ImmutableInstruction35c(Opcode.INVOKE_STATIC, 2, 0, 1, 0, 0, 0,
                 new ImmutableMethodReference("Landroid/os/SystemProperties;", "getBoolean", Arrays.asList("Ljava/lang/String;", "Z"), "Z"))));
         items.add(new RealInst(new ImmutableInstruction11x(Opcode.MOVE_RESULT, 0)));
 
-        // If blocked, delegate to original
         items.add(new Branch21t(Opcode.IF_EQZ, 0, "delegate_orig"));
 
-        // Suppress detection with empty list
         items.add(new RealInst(new ImmutableInstruction21c(Opcode.NEW_INSTANCE, 0, new ImmutableTypeReference("Ljava/util/ArrayList;"))));
         items.add(new RealInst(new ImmutableInstruction35c(Opcode.INVOKE_DIRECT, 1, 0, 0, 0, 0, 0,
                 new ImmutableMethodReference("Ljava/util/ArrayList;", "<init>", Collections.emptyList(), "V"))));
         items.add(new RealInst(new ImmutableInstruction11x(Opcode.RETURN_OBJECT, 0)));
 
-        // Delegate to original
         items.add(new LabelItem("delegate_orig"));
         Opcode invOp = isStatic ? Opcode.INVOKE_STATIC : Opcode.INVOKE_DIRECT;
         int r0 = (paramRegs > 0) ? p0 : 0;
@@ -675,19 +808,16 @@ public class SfsPatcher {
         int p0 = totalRegisters - paramRegs;
 
         List<InstItem> items = new ArrayList<>();
-        // Read property (default true)
         items.add(new RealInst(new ImmutableInstruction21c(Opcode.CONST_STRING, 0, new ImmutableStringReference("persist.sys.sfs.screenshot"))));
         items.add(new RealInst(new ImmutableInstruction11n(Opcode.CONST_4, 1, 1)));
         items.add(new RealInst(new ImmutableInstruction35c(Opcode.INVOKE_STATIC, 2, 0, 1, 0, 0, 0,
                 new ImmutableMethodReference("Landroid/os/SystemProperties;", "getBoolean", Arrays.asList("Ljava/lang/String;", "Z"), "Z"))));
         items.add(new RealInst(new ImmutableInstruction11x(Opcode.MOVE_RESULT, 0)));
 
-        // If SFS is enabled (v0 != 0), branch is NOT taken -> return false (not disallowed = allowed!)
         items.add(new Branch21t(Opcode.IF_EQZ, 0, "sfs_disabled"));
         items.add(new RealInst(new ImmutableInstruction11n(Opcode.CONST_4, 0, 0)));
         items.add(new RealInst(new ImmutableInstruction11x(Opcode.RETURN, 0)));
 
-        // SFS is disabled: delegate to original stub implementation
         items.add(new LabelItem("sfs_disabled"));
         items.add(new Branch21t(Opcode.IF_EQZ, p0, "stub_null"));
 
@@ -707,7 +837,6 @@ public class SfsPatcher {
         items.add(new RealInst(new ImmutableInstruction11x(Opcode.MOVE_RESULT, 0)));
         items.add(new RealInst(new ImmutableInstruction11x(Opcode.RETURN, 0)));
 
-        // Stub was null: return false (allowed)
         items.add(new LabelItem("stub_null"));
         items.add(new RealInst(new ImmutableInstruction11n(Opcode.CONST_4, 0, 0)));
         items.add(new RealInst(new ImmutableInstruction11x(Opcode.RETURN, 0)));
@@ -726,6 +855,89 @@ public class SfsPatcher {
                 "sfs$notAllowCaptureDisplay",
                 params,
                 "Z",
+                AccessFlags.PRIVATE.getValue() | AccessFlags.STATIC.getValue(),
+                Collections.emptySet(),
+                Collections.emptySet(),
+                impl
+        );
+    }
+
+    private static Method createSfsCopyFromMethod(String definingClass) {
+        int totalRegisters = 5;
+        int v0 = 0;
+        int v1 = 1;
+        int v2 = 2;
+        int p0 = 3;
+        int p1 = 4;
+
+        List<InstItem> items = new ArrayList<>();
+
+        items.add(new Branch21t(Opcode.IF_NEZ, p0, "target_valid"));
+        items.add(new RealInst(new ImmutableInstruction11n(Opcode.CONST_4, v0, 0)));
+        items.add(new RealInst(new ImmutableInstruction11x(Opcode.RETURN, v0)));
+
+        items.add(new LabelItem("target_valid"));
+        items.add(new RealInst(new ImmutableInstruction35c(
+                Opcode.INVOKE_VIRTUAL,
+                2,
+                p0, p1, 0, 0, 0,
+                new ImmutableMethodReference(
+                        "Landroid/view/WindowManager$LayoutParams;",
+                        "copyFrom",
+                        Collections.singletonList("Landroid/view/WindowManager$LayoutParams;"),
+                        "I"
+                )
+        )));
+        items.add(new RealInst(new ImmutableInstruction11x(Opcode.MOVE_RESULT, v0)));
+
+        items.add(new RealInst(new ImmutableInstruction21c(Opcode.CONST_STRING, v1, new ImmutableStringReference("persist.sys.sfs.screenshot"))));
+        items.add(new RealInst(new ImmutableInstruction11n(Opcode.CONST_4, v2, 1)));
+        items.add(new RealInst(new ImmutableInstruction35c(
+                Opcode.INVOKE_STATIC,
+                2,
+                v1, v2, 0, 0, 0,
+                new ImmutableMethodReference(
+                        "Landroid/os/SystemProperties;",
+                        "getBoolean",
+                        Arrays.asList("Ljava/lang/String;", "Z"),
+                        "Z"
+                )
+        )));
+        items.add(new RealInst(new ImmutableInstruction11x(Opcode.MOVE_RESULT, v1)));
+        items.add(new Branch21t(Opcode.IF_EQZ, v1, "done"));
+
+        items.add(new RealInst(new ImmutableInstruction21s(Opcode.CONST_16, v2, 0x2000)));
+        items.add(new RealInst(new ImmutableInstruction12x(Opcode.NOT_INT, v2, v2)));
+
+        ImmutableFieldReference flagsField = new ImmutableFieldReference(
+                "Landroid/view/WindowManager$LayoutParams;",
+                "flags",
+                "I"
+        );
+        items.add(new RealInst(new ImmutableInstruction22c(Opcode.IGET, v1, p0, flagsField)));
+        items.add(new RealInst(new ImmutableInstruction23x(Opcode.AND_INT, v1, v1, v2)));
+        items.add(new RealInst(new ImmutableInstruction22c(Opcode.IPUT, v1, p0, flagsField)));
+
+        items.add(new Branch21t(Opcode.IF_EQZ, p1, "done"));
+        items.add(new RealInst(new ImmutableInstruction22c(Opcode.IGET, v1, p1, flagsField)));
+        items.add(new RealInst(new ImmutableInstruction23x(Opcode.AND_INT, v1, v1, v2)));
+        items.add(new RealInst(new ImmutableInstruction22c(Opcode.IPUT, v1, p1, flagsField)));
+
+        items.add(new LabelItem("done"));
+        items.add(new RealInst(new ImmutableInstruction11x(Opcode.RETURN, v0)));
+
+        MethodImplementation impl = new ImmutableMethodImplementation(totalRegisters, resolveInstructions(items), null, null);
+
+        List<MethodParameter> params = Arrays.asList(
+                new ImmutableMethodParameter("Landroid/view/WindowManager$LayoutParams;", Collections.emptySet(), "target"),
+                new ImmutableMethodParameter("Landroid/view/WindowManager$LayoutParams;", Collections.emptySet(), "source")
+        );
+
+        return new ImmutableMethod(
+                definingClass,
+                "sfs$copyFrom",
+                params,
+                "I",
                 AccessFlags.PRIVATE.getValue() | AccessFlags.STATIC.getValue(),
                 Collections.emptySet(),
                 Collections.emptySet(),

@@ -1,6 +1,6 @@
 # Simple Flag Secure
-   
-> 👀 Lightweight root module that disables FLAG_SECURE, enabling screenshots & screen recording in restricted apps. Hides screenshot detection on Android 14+. Includes a toggleable privacy mode to block screenshots system-wide. Supports Magisk, KernelSU, APatch & forks with no extra dependencies.
+
+> 👀 Lightweight module that disables `FLAG_SECURE`, enabling screenshots & screen recording across restricted apps. Hides screenshot detection and suppresses screen share warnings. Includes a toggleable privacy mode to block screenshots system-wide. Available in **Standalone**, **Zygisk**, and **Non-Root (LSPatch)** editions.
 
 [![Downloads](https://img.shields.io/github/downloads/ShivamXD6/Simple-Flag-Secure/total?color=green&style=for-the-badge)](https://github.com/ShivamXD6/Simple-Flag-Secure/releases/latest)
 [![Release](https://img.shields.io/github/v/release/ShivamXD6/Simple-Flag-Secure?style=for-the-badge)](https://github.com/ShivamXD6/Simple-Flag-Secure/releases/latest)
@@ -8,91 +8,179 @@
 [![Join Chat](https://img.shields.io/badge/Join%20Chat-Build%20Bytes%20Discussion-2CA5E0?style=for-the-badge&logo=telegram)](https://telegram.me/BuildBytesDiscussion)
 ![Android](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white)
 ![Root](https://img.shields.io/badge/Root-ff0000?style=for-the-badge&logo=superuser&logoColor=white)
+![Non-Root](https://img.shields.io/badge/Non--Root-4285F4?style=for-the-badge&logo=android&logoColor=white)
 ![Magisk](https://img.shields.io/badge/Magisk-8A2BE2?style=for-the-badge&logo=magisk&logoColor=white)
 ![KernelSU](https://img.shields.io/badge/KernelSU-000000?style=for-the-badge&logo=linux&logoColor=white)
 ![APatch](https://img.shields.io/badge/APatch-FF6B00?style=for-the-badge&logo=android&logoColor=white)
 
-## ❔ Why Simple Flag Secure?
+---
 
-You may be wondering: **Why use this when other FLAG_SECURE modules (dependent on Zygisk / LSPosed) already exists?**
+## ✨ Features
 
-Simple Flag Secure focuses on being lightweight, maintainable, and compatible with newer Android versions and root solutions.
-
-- 🛠️ **No Zygisk or LSPosed Required** — 100% standalone, no extra frameworks or meta-modules needed.
-- 🪶 **Ultra-Compact (286 KB)** — Shrunk by 75% with zero bloat; patcher runs once and cleans up immediately.
-- 🔋 **Zero Battery Drain & RAM Friendly** — Patched once at install time; zero background services or daemons running.
-- 🚫 **Screenshot Detection Blocking** — Prevents apps from detecting screenshots (WhatsApp, Snapchat, etc. on Android 14+).
+- 🚫 **Unlocks Screenshots & Screen Recordings Everywhere** — Captures restricted screens in banking apps, financial services, WhatsApp view-once media, profile photos, and incognito tabs.
+- 🔕 **Screenshot Detection & Warning Blocking** — Prevents apps from detecting screenshots and suppresses all detection warnings or chat notifications (WhatsApp, Snapchat, etc.).
 - 🔕 **Suppresses Screen Share Warnings** — Hides the irritating _"App content hidden from screen share"_ popup on Android 15/16.
-- 🎛️ **Interactive Volume Key Menu** — Switch between ALLOWED and BLOCKED (`[Vol +]`) or run live diagnostics (`[Vol -]`) without rebooting.
-- 🩺 **Built-in Auto Diagnostics** — Saves diagnostic logs (`sfs_debug.log`) & `services.jar` directly to your Downloads folder.
-- ⭐ **Modern Root Manager Support** — Works seamlessly with Magisk, KernelSU, APatch, and forks.
+- 🛠️ **No Root or Framework Required (LSPatch Edition)** — Non-root users can embed SFS directly into targeted APKs with zero root footprint.
+- 🛠️ **No Zygisk or LSPosed Required (Standalone Edition)** — 100% standalone option available, zero extra frameworks or meta-modules needed.
+- 🎛️ **Interactive Privacy Mode (Action & Volume Menu)** — Switch between ALLOWED and BLOCKED (`[Vol +]`) or run live diagnostics (`[Vol -]`) without rebooting.
+- 🔋 **Zero Battery Drain & RAM Friendly** — Ultra-lightweight with zero background daemons or battery consumption.
+- 🪶 **Ultra-Compact Footprint** — Down to just **~19 KB** (Zygisk), **~172 KB** (Standalone), and **~16.5 KB** (LSPatch APK) with zero bloat.
+- 🩺 **Built-in Auto Diagnostics** — Saves unified diagnostic log (`sfs.log`) directly to your Downloads folder for 1-click troubleshooting.
+- ⭐ **Modern Root Manager Support** — Works seamlessly with Magisk, KernelSU, APatch, and all their forks.
 - 🔄 **In-App Manager Updates** — Native one-click updates directly inside root managers via `updateJson`.
-- 📱 **Broad OEM Compatibility** — Full support for HyperOS, MIUI, OxygenOS, ColorOS, Realme UI, and One UI.
+- 📱 **Broad OEM & OS Compatibility** — Supports Android 8 through Android 16 on HyperOS, MIUI, OxygenOS, ColorOS, Realme UI, and One UI.
 
-### 📊 How Does Simple Flag Secure Compare?
+---
 
-| Feature                                   |           **Simple Flag Secure**            |                             **ih8SecureLock**                              |             **DisableFlagSecure**              |
-| :---------------------------------------- | :-----------------------------------------: | :------------------------------------------------------------------------: | :--------------------------------------------: |
-| **Architecture**                          | **System Framework Patch** (`services.jar`) |                       Zygisk In-Process Hook (`.so`)                       |        Xposed In-Process Hook (LSPosed)        |
-| **Dependencies**                          |            **None (Standalone)**            |                        Requires Zygisk / ZygiskNext                        |           Requires LSPosed + Zygisk            |
-| **Works with Banking Apps / Denylist**    |           ✅ **100% Compatible**            | ❌ **Broken on Denylist** _(stops working if unmount/hide root is active)_ |    ⚠️ **Fails or triggers root detection**     |
-| **Client App Tamper Detection**           |         🛡️ **Zero (Undetectable)**          |              ⚠️ High (Foreign `.so` injected into app memory)              | ❌ High (Xposed hooks easily flagged by banks) |
-| **Battery & CPU Overhead**                |           🔋 **0% (Zero drain)**            |                         ⚠️ In-memory hook overhead                         |     ❌ High drain (Xposed daemon + bridge)     |
-| **Runtime RAM Usage**                     |    ⚡ **0 MB (No background processes)**    |                     Persistent memory overhead per app                     |       Heavy (~50MB+ for LSPosed daemon)        |
-| **Hides Screenshot Alerts (Android 14+)** |         ✅ **Built-in System-wide**         |                          ⚠️ Only for hooked apps                           |                ❌ Not supported                |
-| **Dynamic Privacy Mode (Block / Allow)**  |      ✅ **Interactive Vol Key Toggle**      |                                  ❌ None                                   |                    ❌ None                     |
+## 🏆 Why Simple Flag Secure?
 
-#### 💡 Why Standalone Framework Patching is Better:
+How does Simple Flag Secure compare to tools like **LSPosed (Disable-FLAG_SECURE)** and **Zygisk ih8SecureLock**?
 
-1. **Works with Banking Apps & Denylist:**
-   Zygisk and LSPosed modules inject code into apps. When you hide root from banking apps using Magisk/KernelSU's **Denylist** (Unmount Modules), Zygisk and LSPosed are disabled — breaking screenshots for the apps where you need them most! Simple Flag Secure patches the Android system itself, so screenshots work everywhere even with full root hiding enabled.
-2. **Zero Detection by Apps:**
-   Restricted apps are never modified or injected with foreign code. Banking and streaming apps cannot detect that screenshots are unlocked.
-3. **Zero Battery Drain:**
-   No background services, hook bridges, or daemons running. Simple Flag Secure patches once during install and leaves behind 0 MB RAM usage and 0% battery drain.
+| Comparison                          | ⚡ Simple Flag Secure                         | 🔒 Zygisk ih8SecureLock               | 🧩 LSPosed                    |
+| :---------------------------------- | :-------------------------------------------- | :------------------------------------ | :---------------------------- |
+| **No Extra Framework Needed**       | ✅ Yes (Lightweight & clean)                  | ✅ Yes                                | ❌ Requires LSPosed framework |
+| **Works with Unmount / DenyList**   | ✅ Yes (Screenshots work even with DenyList!) | ❌ No (Forces you to unmount apps)    | ❌ No                         |
+| **Banking App Safe**                | ✅ Zero traces in protected apps              | ⚠️ Requires unmounting, exposing root | ❌ Easily detected            |
+| **Screenshot Detection Blocking**   | ✅ Yes (Prevents alerts & toasts)             | ✅ Yes                                | ⚠️ Depends on module          |
+| **Interactive Privacy Mode Toggle** | ✅ Yes (Switch Allowed/Blocked anytime)       | ❌ No                                 | ❌ No                         |
+| **Standalone (No Zygisk) Option**   | ✅ Yes                                        | ❌ No                                 | ❌ No                         |
+| **Non-Root (LSPatch) Option**       | ✅ Yes (Patch any target APK)                 | ❌ No                                 | ❌ No                         |
+| **Action Button Toggle & Logs**     | ✅ Yes                                        | ❌ No                                 | ❌ No                         |
 
-## 📥 Installation
+> [!TIP]
+> **Freedom of Choice:**
+> Simple Flag Secure gives you complete freedom and flexibility! You aren't forced into any single framework or root method. Whether you prefer **Zygisk** (RAM-only), **Standalone** (framework overlay without Zygisk), or **LSPatch / LSPosed** (per-app without system modification or root), you can choose the exact variant tailored to your personal device setup and security preferences.
 
-Removing screenshot restrictions is straightforward:
+---
 
-1. **Install the Module**
-   Open your Magisk, KernelSU, or APatch manager → **Modules** → **Install from storage** → Select the **Simple Flag Secure** ZIP.
+## 🚀 Choose Your Variant
+
+Simple Flag Secure is available in three distinct variants:
+
+| Variant               | ⚡ **Zygisk Edition**              | 🛡️ **Standalone Edition**                 | 📱 **LSPatch & LSPosed Edition**                                             |
+| :-------------------- | :--------------------------------- | :---------------------------------------- | :--------------------------------------------------------------------------- |
+| **Target User**       | Rooted users using Zygisk          | Rooted users wanting zero Zygisk overhead | **Non-root** users or LSPosed framework users                                |
+| **Requirements**      | Any Zygisk implementation          | Magisk, KernelSU, or APatch               | [JingMatrix LSPatch](https://github.com/JingMatrix/LSPatch) or **LSPosed**    |
+| **Filesystem Mounts** | **Zero mounts** (all hooks in RAM) | Clean on-device framework mount           | **None** (Embedded inside target APK or hooked via LSPosed)                 |
+| **Size**              | **~19 KB** (Ultra-compact)         | **~172 KB** (Includes dex patcher)        | **~16.5 KB** (Compact helper APK)                                            |
+| **Privacy Toggle**    | ✅ Action button / Volume key      | ✅ Action button / Volume key             | N/A (Always active in patched app / LSPosed scope)                           |
+
+---
+
+## 📱 Non-Root Users: LSPatch Setup Guide
+
+If your device is not rooted (or you prefer not to touch root hooks), you can use the **LSPatch variant** (`Simple_Flag_Secure_LSPatch_v10.0.apk`) to patch any restricted app directly on your phone:
 
 > [!NOTE]
-> **For ReSuKiSU / KernelSU Users:** If your manager displays a warning saying _"This module requires a meta-module to mount"_, you can **safely ignore it**. Simple Flag Secure has built-in standalone mounting (`post-fs-data.sh`) and does **not** need any meta-module (such as NoMount, Mountify, or Hybrid Mount). In fact, running SFS standalone avoids filesystem mount leaks, keeping your banking apps from detecting root!
+> **Using LSPosed instead?**
+> This exact same APK is a fully compliant standard Xposed module! If you have root with **LSPosed**, you can simply install `Simple_Flag_Secure_LSPatch_v10.0.apk`, enable it in the LSPosed Manager, check your target apps in its scope, and you are good to go!
 
-2. **Automatic Installation Logs**
-   Installation logs are **automatically saved** to `/sdcard/Download/sfs_install.log` (and inside the module folder). No need to manually press the save button!
+### Recommended Tool
 
-3. **Reboot**
-   Restart your device to apply the changes.
+- **[JingMatrix LSPatch](https://github.com/JingMatrix/LSPatch)** (Recommended modern LSPatch fork for Android 10-15+)
 
-4. **Test**
-   Try taking a screenshot or recording your screen in an app that normally blocks it, such as a WhatsApp profile picture or Chrome Incognito.
+### Step-by-Step Instructions:
 
-## 🧰 Troubleshooting
+1. **Download & Install**:
+   - Install the latest **[JingMatrix LSPatch release](https://github.com/JingMatrix/LSPatch/releases)** APK on your device.
+   - Download `Simple_Flag_Secure_LSPatch_v8.0.apk` from [Releases](https://github.com/ShivamXD6/Simple-Flag-Secure/releases/latest).
+2. **Open LSPatch**:
+   - Open LSPatch and grant the requested storage permissions.
+   - Go to the **Manage** tab → Tap the `+` button → Select **New Patch**.
+3. **Select Target App**:
+   - Choose the application where screenshots are blocked (either from installed apps or by picking an APK file directly).
+4. **Embed Simple Flag Secure**:
+   - Choose **Portable Mode** (embeds module directly so LSPatch app isn't needed later).
+   - Under **Embed modules**, tap `+` and choose the downloaded `Simple_Flag_Secure_LSPatch_v8.0.apk`.
+5. **Start Patching**:
+   - Tap **Start Patching**. LSPatch will recompile and resign the target APK.
+6. **Install the Patched App**:
+   - Uninstall the original target app from your device (backup your data first!).
+   - Install the patched APK produced by LSPatch.
+7. **Done!** Screenshots and screen recordings are now permanently unlocked inside that app without requiring root access.
 
-### 🔄 Bootloop / System Doesn't Boot
+---
 
-If the module causes a bootloop or prevents Android from starting:
+## ⚡ Rooted Users: Zygisk Edition Setup
 
-1. Reboot into **Recovery** (TWRP or another recovery).
-2. Navigate to:
-   `/data/adb/modules/simple_flag_secure`
-3. Delete the `simple_flag_secure` directory.
-4. Reboot into System.
-5. Report the issue in the **[Build Bytes Discussion](https://telegram.me/BuildBytesDiscussion)** group.
+### Recommended Zygisk Providers:
 
-### 🚫 Module Doesn't Work / Need Help?
+- **[Zygisk Next](https://github.com/Dr-TSNG/ZygiskNext)** (Recommended for Magisk, KernelSU, and APatch)
+- **[ReZygisk CLI (Pre-release)](https://github.com/PerformanC/ReZygisk)** (High performance alternative)
+- Built-in Zygisk in Magisk
 
-Taking diagnostic logs is now super easy directly from your root manager:
+### Troubleshooting Zygisk Edition:
 
-1. Tap the **Action** button in Magisk, KernelSU, or APatch (or run `su -c "sh /data/adb/modules/simple_flag_secure/action.sh record"` in Termux).
-2. Press **Volume Down [Vol -]** within 30 seconds to start the live recording session.
-3. Switch to your restricted app and try taking a screenshot.
-4. Press **ANY hardware button** (Volume Up, Volume Down, or Power) — recording stops instantly with 0ms delay!
-5. Both `sfs_debug.log` and your system's `services.jar` are automatically saved to your **`Downloads`** folder (`/sdcard/Download/`), and Telegram opens directly to **[Build Bytes Discussion](https://telegram.me/BuildBytesDiscussion)**.
-6. Share **BOTH** files (`sfs_debug.log` & `services.jar`) in the group for instant help!
+If the module reports `NOT WORKING` or screenshots are not unlocking on your setup:
+
+1. **Switch to Zygisk Next**: Even if you are using Magisk, installing **Zygisk Next** fixes issues on heavy skins like HyperOS, MIUI, and One UI.
+2. **Try ReZygisk latest pre-release**: Offers the newest compatibility updates.
+3. **Add the app to DenyList / Umount**: If an app still blocks screenshots, simply add it to your root manager's DenyList or Umount list and reboot. SFS is built to work even when apps are unmounted!
+
+---
+
+## 🛡️ Rooted Users: Standalone Edition Setup
+
+The Standalone edition patches your system files directly on your phone without needing any Zygisk or Xposed frameworks.
+
+### Mount & Root Hiding:
+
+- **Built-in Mounting**: Standalone has built-in mounting support for Magisk, KernelSU, and APatch.
+- **Using SUSFS?**: If your kernel has **SUSFS**, Standalone is completely hidden out of the box—you do **not** need any extra modules to hide it!
+- **Without SUSFS**: If a sensitive banking app detects modified system files, you can optionally pair it with a mount hider like `NoMount` or `Hybrid Mount`.
+- **Prefer zero file changes?**: Just use the **Zygisk Edition**, which keeps everything in memory and modifies zero system files!
+
+---
+
+## 🎛️ Privacy Mode (Instant Toggle)
+
+Need to temporarily block screenshots and screen recordings for extra privacy? Simple Flag Secure includes a built-in **Privacy Mode** that lets you toggle states on the fly without rebooting your phone:
+
+- **✅ ALLOWED**: Screenshots & recordings work everywhere.
+- **❌ BLOCKED (Privacy Mode)**: Screenshots & recordings are blocked system-wide.
+
+### How to use:
+
+1. Tap the **Action** button in your root manager (Magisk, KernelSU, or APatch).
+2. Press **Volume Up [Vol +]** within 30 seconds to instantly switch modes.
+3. _(Bonus)_ Press **Volume Down [Vol -]** if you ever need to record a quick diagnostic log.
+
+> [!TIP]
+> You can also toggle it from a terminal (Termux) anytime:
+>
+> - Turn Privacy Mode ON (Blocked): `su -c "/data/adb/modules/simple_flag_secure*/action.sh block"`
+> - Turn Privacy Mode OFF (Allowed): `su -c "/data/adb/modules/simple_flag_secure*/action.sh allow"`
+
+---
+
+## 📥 Installation Summary
+
+1. **Download your preferred edition from [Releases](https://github.com/ShivamXD6/Simple-Flag-Secure/releases/latest):**
+   - ⚡ `Simple_Flag_Secure_Zygisk_v10.0.zip` (for Zygisk users)
+   - 🛡️ `Simple_Flag_Secure_v10.0.zip` (for Standalone users)
+   - 📱 `Simple_Flag_Secure_LSPatch_v10.0.apk` (for Non-Root LSPatch / LSPosed users)
+2. **Flash in your Root Manager (Zygisk / Standalone):**
+   Open Magisk, KernelSU, or APatch manager → **Modules** → **Install from storage** → Select the ZIP.
+3. **Reboot** your device to activate the module.
+4. **Test:** Try taking a screenshot in an app that normally blocks it (e.g., Chrome Incognito).
+
+---
+
+## 📢 Important Note for Future Updates & Support
+
+> [!IMPORTANT]
+> **A message from the developer:**
+> Due to current personal financial constraints, I cannot dedicate as much time to active daily maintenance or immediate personal support for this module.
+> 
+> **How you can help keep Simple Flag Secure alive:**
+> 1. **Support via Donation**: If the module has helped you, even a small donation goes a long way toward keeping the project maintained.
+> 2. **Self-Debug with AI & Community Contribution**:
+>    - Simple Flag Secure has **built-in comprehensive diagnostic logging** (`[Vol -]` in the Action menu creates `sfs.log` + `sfs_report.tar.gz` in your Downloads folder).
+>    - If you encounter an issue on your device, **feed your diagnostic logs directly into modern AI models** (like Gemini, Claude, or ChatGPT) to pinpoint why your ROM blocked screenshots or failed to mount!
+>    - If you or an AI find a fix or optimization, **please open a Pull Request (PR)** so the entire community benefits!
+> 3. **Telegram Discussion**: If you cannot resolve it yourself, report it with your `sfs.log` in our group: **[@BuildBytesDiscussion](https://telegram.me/BuildBytesDiscussion)**. Please understand that immediate individual support cannot be guaranteed.
+
+---
 
 ## 🙏 Support & Donations
 
@@ -100,32 +188,17 @@ If you find Simple Flag Secure useful and would like to support its development:
 
 - 💲 **Bhim (International UPI):** UPI ID - `shivamdhage@upi` | [Donate via QR](https://i.ibb.co/ZRm2xN2L/bhimupi.jpg)
 - 💵 **GPay / UPI:** UPI ID - `shivamashokdhage6@oksbi` | [Donate via QR](https://i.ibb.co/5g4J2RXR/1f38d6d7-a8a2-4696-88e6-9cf503e0592c.png)
-- 💰 **PayPal:** Username - `ShivamXD6` [Donate via PayPal](https://www.paypal.com/paypalme/ShivamXD6)
+- 💰 **PayPal:** Username - `ShivamXD6` | [Donate via PayPal](https://www.paypal.com/paypalme/ShivamXD6)
 
-Your support helps keep the project maintained and improve compatibility with newer Android versions.
+---
 
 ## 🙌 Credits
 
-- **[ShirigiriPatil](https://telegram.me/BosadBillaHun)**
-  Tested the module on KernelSU.
-
-- **[LazyMeao](https://telegram.me/lazymeao)** & [@Black_luciferS](https://github.com/Blacklucifer82)
-  Tested the module on Realme UI 2.0 for compatibility and Toggle Action of Block / Unblock.
-
-- **[ShishirThakur](https://telegram.me/Shishirsthakur)**
-  Tested screenshot detection functionality on Android 14+.
-
-- **[Marmot](https://telegram.me/aptgo)**
-  Tested the module on MIUI Android 11 using SukiSU, a KernelSU fork, helping verify compatibility and stability.
-
-- **[@nyxnrv](https://github.com/777kzn)**
-  Tested the module on HyperOS Android 17 Kernel SU.
-
-- **[@Vikrant_R_Rajput](https://telegram.me/DeskAestheticx)**
-  Tested the module on Samsung's OneUI Port Magisk.
-
-- **[@idral](https://telegram.me/idral)**
-  Tested the module without MetaModule for standalone mounting test.
-
-- **[@pocexa](https://telegram.me/pocexa)**
-  Tested the module on Poco X6 Pro for Screeenshot timeout issues.
+- **[ShirigiriPatil](https://telegram.me/BosadBillaHun)** — Tested the module on KernelSU.
+- **[LazyMeao](https://telegram.me/lazymeao)** & [@Black_luciferS](https://github.com/Blacklucifer82) — Tested on Realme UI 2.0 for compatibility and Toggle Action.
+- **[ShishirThakur](https://telegram.me/Shishirsthakur)** — Tested screenshot detection functionality on Android 14+.
+- **[Marmot](https://telegram.me/aptgo)** — Tested on MIUI Android 11 using SukiSU.
+- **[@nyxnrv](https://github.com/777kzn)** — Tested on HyperOS Android 17 KernelSU.
+- **[@Vikrant_R_Rajput](https://telegram.me/DeskAestheticx)** — Tested on Samsung OneUI Port Magisk.
+- **[@idral](https://telegram.me/idral)** — Tested standalone mounting.
+- **[@pocexa](https://telegram.me/pocexa)** — Tested on Poco X6 Pro for screenshot timeout issues.

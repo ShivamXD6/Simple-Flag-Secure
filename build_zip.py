@@ -2,7 +2,7 @@
 import os
 import zipfile
 
-OUTPUT_ZIP = "Simple_Flag_Secure_v7.7.zip"
+OUTPUT_ZIP = "Simple_Flag_Secure_v10.0.zip"
 
 FILES_TO_ADD = [
     ("META-INF/com/google/android/update-binary", "META-INF/com/google/android/update-binary"),
@@ -21,9 +21,12 @@ if os.path.exists(OUTPUT_ZIP):
 
 with zipfile.ZipFile(OUTPUT_ZIP, "w", zipfile.ZIP_DEFLATED) as zf:
     for src, arc in FILES_TO_ADD:
-        # Force forward slash for Android / Linux compatibility
         arc_posix = arc.replace("\\", "/")
-        zf.write(src, arc_posix)
+        with open(src, "rb") as f:
+            content = f.read()
+        if src.endswith(".sh") or src.endswith(".prop") or "META-INF" in src:
+            content = content.replace(b"\r\n", b"\n")
+        zf.writestr(arc_posix, content)
         print(f"  added: {arc_posix}")
 
 size_mb = os.path.getsize(OUTPUT_ZIP) / (1024 * 1024)

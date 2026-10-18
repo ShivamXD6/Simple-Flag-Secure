@@ -1,0 +1,7 @@
+id=simple_flag_secure_zygisk
+name=Simple Flag Secure (Zygisk)
+version=v10.0
+versionCode=100
+author=@BuildBytes (@ShivamXD6 aka @ShastikXD)
+updateJson=https://raw.githubusercontent.com/ShivamXD6/Simple-Flag-Secure/main/update_zygisk.json
+description=Bypasses screenshot restrictions and hides screenshot detection via Zygisk.
