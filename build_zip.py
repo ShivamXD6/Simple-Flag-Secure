@@ -26,7 +26,15 @@ with zipfile.ZipFile(OUTPUT_ZIP, "w", zipfile.ZIP_DEFLATED) as zf:
             content = f.read()
         if src.endswith(".sh") or src.endswith(".prop") or "META-INF" in src:
             content = content.replace(b"\r\n", b"\n")
-        zf.writestr(arc_posix, content)
+
+        zinfo = zipfile.ZipInfo(arc_posix)
+        zinfo.compress_type = zipfile.ZIP_DEFLATED
+        if arc_posix.endswith(".sh") or "update-binary" in arc_posix:
+            zinfo.external_attr = 0o755 << 16
+        else:
+            zinfo.external_attr = 0o644 << 16
+
+        zf.writestr(zinfo, content)
         print(f"  added: {arc_posix}")
 
 size_mb = os.path.getsize(OUTPUT_ZIP) / (1024 * 1024)

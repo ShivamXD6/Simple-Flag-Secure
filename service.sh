@@ -1,7 +1,9 @@
 #!/system/bin/sh
 MODDIR="${0%/*}"
 [ "$MODDIR" = "$0" ] && MODDIR="."
-[ -d "$MODDIR" ] || MODDIR="/data/adb/modules/simple_flag_secure"
+if [ "$MODDIR" = "." ] || [ ! -f "$MODDIR/module.prop" ]; then
+    MODDIR="/data/adb/modules/simple_flag_secure"
+fi
 LOG_FILE="$MODDIR/sfs_debug.log"
 
 notify() {

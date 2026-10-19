@@ -1,7 +1,9 @@
 #!/system/bin/sh
 MODDIR="${0%/*}"
 [ "$MODDIR" = "$0" ] && MODDIR="."
-[ -d "$MODDIR" ] || MODDIR="/data/adb/modules/simple_flag_secure"
+if [ "$MODDIR" = "." ] || [ ! -f "$MODDIR/module.prop" ]; then
+    MODDIR="/data/adb/modules/simple_flag_secure"
+fi
 LOG_FILE="$MODDIR/sfs_debug.log"
 LOGCAT_PID_FILE="$MODDIR/.logcat.pid"
 LOGCAT_TMP="$MODDIR/.logcat_recording.tmp"
@@ -350,7 +352,12 @@ if [ -z "$TARGET" ]; then
         echo "  Mount Status: ✅ OK"
     else
         echo "  Mount Status: ⚠️ FAIL"
-        echo "  ⚠️ Warning: services.jar not mounted! Press [Vol -] to export logs."
+        if [ ! -f "$MODDIR/sfs_reboot.log" ]; then
+            echo "  ⚠️ Notice: Device was NOT rebooted after install!"
+            echo "     Please do a FULL REBOOT (not soft reboot)."
+        else
+            echo "  ⚠️ Warning: services.jar not mounted! Press [Vol -] to export logs."
+        fi
     fi
     echo "--------------------------------------------------"
     echo "  👉 Press a Volume Button within 30s:"

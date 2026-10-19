@@ -1,5 +1,8 @@
 #!/system/bin/sh
 MODDIR="${0%/*}"
+if [ "$MODDIR" = "$0" ] || [ ! -f "$MODDIR/module.prop" ]; then
+  MODDIR="/data/adb/modules/simple_flag_secure"
+fi
 PATCHED_JAR="$MODDIR/services.jar"
 TARGET_JAR="/system/framework/services.jar"
 
@@ -8,12 +11,6 @@ LOG_FILE="$MODDIR/sfs_reboot.log"
 log_step() {
   echo "$(date '+%Y-%m-%d %H:%M:%S') [reboot] $*" >> "$LOG_FILE"
 }
-
-# Resolve canonical paths if symlinked
-REAL_TARGET="$(readlink -f "$TARGET_JAR" 2>/dev/null)"
-[ -f "$REAL_TARGET" ] && TARGET_JAR="$REAL_TARGET"
-REAL_PATCHED="$(readlink -f "$PATCHED_JAR" 2>/dev/null)"
-[ -f "$REAL_PATCHED" ] && PATCHED_JAR="$REAL_PATCHED"
 
 {
   echo "=================================================="
@@ -31,33 +28,25 @@ REAL_PATCHED="$(readlink -f "$PATCHED_JAR" 2>/dev/null)"
   exit 0
 }
 
-# Stage in clean tmpfs to eliminate /adb/ root token from mountinfo
-
 log_step "Setting SELinux context on patched jar..."
 chcon --reference="$TARGET_JAR" "$PATCHED_JAR" >> "$LOG_FILE" 2>&1 || \
 chcon u:object_r:system_file:s0 "$PATCHED_JAR" >> "$LOG_FILE" 2>&1
 
-# Stage in clean tmpfs to eliminate /adb/ root token from mountinfo
-STAGING_DIR="/dev/.sfs_stage"
-mkdir -p "$STAGING_DIR" 2>/dev/null
-mount -t tmpfs -o size=64M,mode=0755 tmpfs "$STAGING_DIR" 2>/dev/null
-cp -f "$PATCHED_JAR" "$STAGING_DIR/services.jar" 2>/dev/null
-chcon --reference="$TARGET_JAR" "$STAGING_DIR/services.jar" 2>/dev/null || \
-chcon u:object_r:system_file:s0 "$STAGING_DIR/services.jar" 2>/dev/null
+# Stage in /dev (already in-memory tmpfs) to eliminate /adb/ root token from mountinfo
+STAGE_JAR="/dev/.sfs_services.jar"
+cp -f "$PATCHED_JAR" "$STAGE_JAR" >> "$LOG_FILE" 2>&1
+chcon --reference="$TARGET_JAR" "$STAGE_JAR" >> "$LOG_FILE" 2>&1 || \
+chcon u:object_r:system_file:s0 "$STAGE_JAR" >> "$LOG_FILE" 2>&1
 
-MOUNT_SRC="$STAGING_DIR/services.jar"
+MOUNT_SRC="$STAGE_JAR"
 [ -f "$MOUNT_SRC" ] || MOUNT_SRC="$PATCHED_JAR"
 
-log_step "Executing mount..."
+log_step "Executing mount from $MOUNT_SRC..."
 mount -o bind "$MOUNT_SRC" "$TARGET_JAR" >> "$LOG_FILE" 2>&1 || \
 mount --bind "$MOUNT_SRC" "$TARGET_JAR" >> "$LOG_FILE" 2>&1 || \
 busybox mount -o bind "$MOUNT_SRC" "$TARGET_JAR" >> "$LOG_FILE" 2>&1
 MOUNT_RES=$?
 log_step "Mount finished: $MOUNT_RES"
-
-# Lazy unmount staging mountpoint (bind mount on TARGET_JAR stays intact)
-umount -l "$STAGING_DIR" 2>/dev/null
-rmdir "$STAGING_DIR" 2>/dev/null
 
 if cmp -s "$PATCHED_JAR" "$TARGET_JAR" 2>/dev/null; then
   log_step "VERIFIED: Mount active."

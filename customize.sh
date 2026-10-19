@@ -23,4 +23,8 @@ if [ -f "$INSTALL_LOG" ]; then
   chmod 644 "$INSTALL_LOG" 2>/dev/null
 fi
 
+chmod 755 "$MODPATH/post-fs-data.sh" 2>/dev/null
+chmod 755 "$MODPATH/service.sh" 2>/dev/null
+chmod 755 "$MODPATH/action.sh" 2>/dev/null
+
 [ "$STATUS" -eq 0 ] || abort "❌ Failed to patch services.jar! Check sfs_install.log"
