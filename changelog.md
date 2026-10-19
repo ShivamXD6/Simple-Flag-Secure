@@ -6,6 +6,7 @@
 ---
 
 ### 🛡️ What's New in v10.1 — Standalone Edition (`Simple_Flag_Secure_v10.1.zip`)
+
 - 🛠️ **Two-Tier Universal Mounting Strategy**:
   - **Tier 1 (Stealth In-Memory Staging)**: On supported devices (OnePlus, Pixel, Xiaomi, Motorola, Nothing, etc.), SFS stages the patched `services.jar` in memory (`/dev`), eliminating all `/data/adb/` root tokens from `/proc/self/mountinfo` for stealth anti-detection against Duck Detector and banking apps.
   - **Tier 2 (Direct Bind Mount Fallback)**: On strict vendor ROMs like Samsung Knox / One UI that block bind-mounting from memory (`devtmpfs`), SFS detects the block and instantly falls back to direct bind mounting. Fixes the `Mount mismatch / services.jar not mounted` failure reported on Samsung Galaxy S25 / Android 16!
@@ -20,12 +21,13 @@
 ---
 
 ### ⚡ What's New in v10.1 — Zygisk Edition (`Simple_Flag_Secure_Zygisk_v10.1.zip`)
+
 - 💡 **Interactive Setup Guidance During Flashing**:
-  - The installer now provides clear, concise setup tips directly in the recovery / manager console.
+  - The installer now provides clear, concise setup tips directly in the manager console.
   - **Recommendation**: Highlights using **Zygisk Next** or **ReZygisk CI**, which hook apps properly even with app unmounting / hiding enabled.
   - **DenyList / Umount Clarification**:
-    - *To screenshot an app*: If using standard Magisk Zygisk, remove the target app from DenyList (Magisk), Umount (KernelSU), or Exclude Modifications (APatch) so the in-app hook can load.
-    - *To hide from banking apps*: Simply add them to DenyList / Umount / Exclude Modifications.
+    - _To screenshot an app_: If using standard Magisk Zygisk, remove the target app from DenyList (Magisk), Umount (KernelSU), or Exclude Modifications (APatch) so the in-app hook can load.
+    - _To hide from banking apps_: Simply add them to DenyList / Umount / Exclude Modifications.
 - 🔄 **In-App Manager Updates**:
   - Native `updateJson` configured for one-click updates directly inside Magisk, KernelSU, and APatch managers.
 - 🪶 **RAM-Only Architecture**:
@@ -34,6 +36,7 @@
 ---
 
 ### 📱 What's New in v10.1 — Non-Root & LSPosed Edition (`Simple_Flag_Secure_LSPatch_v10.1.apk`)
+
 - 🎨 **Official 👀 App Icon**:
   - Added a distinctive, modern app icon featuring the signature 👀 emoji on a dark slate background.
   - Fully supports modern Android **Adaptive Icons** (`mipmap-anydpi-v26`) as well as circular icons and legacy launcher mipmaps (`mdpi` up to `xxxhdpi`).
@@ -54,6 +57,7 @@
 ---
 
 ### 📱 [v10] Non-Root Edition (LSPatch & LSPosed APK)
+
 - 🚀 **Works Without Root**: Take screenshots in restricted apps on unrooted phones by patching them with **[JingMatrix LSPatch](https://github.com/JingMatrix/LSPatch)**.
 - 🧩 **LSPosed Compatible**: Also works directly as a standard module inside LSPosed if your device is rooted.
 - 🔕 **Blocks Screenshot Alerts**: Stops apps (like WhatsApp, Snapchat) from notifying the sender or showing warning toasts when you take a screenshot.
@@ -62,6 +66,7 @@
 ---
 
 ### ⚡ [v9] Zygisk Edition (RAM-Only / In-Memory)
+
 - 🥷 **Smart Per-App Hooking**:
   - Automatically bypasses restrictions inside apps while staying completely hidden.
   - If a stubborn app still blocks screenshots, simply turn off DenyList / Umount / Exclude Modifications for that app so the direct in-app hook attaches!
@@ -71,6 +76,7 @@
 ---
 
 ### 🛡️ [v8] Standalone Edition (No Zygisk Required)
+
 - 🛠️ **100% Standalone**: Automatically patches screenshot restrictions on boot without needing Zygisk or Xposed.
 - 📱 **OnePlus & Oppo Fix**: Fixed screenshot blocking on OnePlus (OxygenOS & ColorOS 14/15) so screenshots capture properly.
 - 🔄 **Built-in Auto-Mount & Android 15 Stability**: Safe mounting without breaking Zygote namespaces or causing soft-reboot loops.
