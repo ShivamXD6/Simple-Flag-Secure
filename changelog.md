@@ -1,33 +1,47 @@
 # 👀 Simple Flag Secure v10.1 — Universal Update
 
 > [!NOTE]
-> This release updates **all three variants** (Standalone, Zygisk, and LSPatch/LSPosed) to **v10.1** with improved mounting resilience, setup guidance, and official app icon!
+> This release updates **all three variants** (Standalone, Zygisk, and LSPatch/LSPosed) to **v10.1**, bringing universal mounting resilience, interactive setup guidance, and an official app icon!
 
 ---
 
-### 🛡️ What's New in v10.1 (Standalone Edition)
-- 🛠️ **Two-Tier Universal Mounting**:
-  - Automatically attempts stealth in-memory staging to eliminate `/adb/` root tokens from mountinfo.
-  - Automatically falls back to direct bind mounting on strict kernels (such as Samsung Knox / One UI) where in-memory mounting is restricted, ensuring SFS works everywhere!
-- 🥷 **KernelSU & SusFS Integration**:
-  - Automatically registers `ksud kernel umount` and SusFS stealth hiding if available.
-- 📱 **Android 15 / 16 Stability**:
-  - Fixed soft-reboot and mounting issues across OxygenOS, ColorOS, HyperOS, and One UI.
+### 🛡️ What's New in v10.1 — Standalone Edition (`Simple_Flag_Secure_v10.1.zip`)
+- 🛠️ **Two-Tier Universal Mounting Strategy**:
+  - **Tier 1 (Stealth In-Memory Staging)**: On supported devices (OnePlus, Pixel, Xiaomi, Motorola, Nothing, etc.), SFS stages the patched `services.jar` in memory (`/dev`), eliminating all `/data/adb/` root tokens from `/proc/self/mountinfo` for stealth anti-detection against Duck Detector and banking apps.
+  - **Tier 2 (Direct Bind Mount Fallback)**: On strict vendor ROMs like Samsung Knox / One UI that block bind-mounting from memory (`devtmpfs`), SFS detects the block and instantly falls back to direct bind mounting. Fixes the `Mount mismatch / services.jar not mounted` failure reported on Samsung Galaxy S25 / Android 16!
+- 🥷 **KernelSU & SusFS Stealth Integration**:
+  - Automatically registers `ksud kernel umount add` to unmount `services.jar` from non-root processes.
+  - Automatically detects and hooks `ksu_susfs` (if installed on KernelSU or APatch) to register `add_sus_path`, `hide_sus_mnts_for_non_su_procs 1`, and `add_try_umount` for seamless mount hiding.
+- 🚫 **Zero Meta-Module Dependency**:
+  - 100% self-sufficient out of the box—no meta-modules (like NoMount or Hybrid Mount) required.
+- 📱 **Android 15 & 16 Stability**:
+  - Fully tested and stable on Android 15 & 16 across HyperOS, OxygenOS, ColorOS, and One UI.
 
 ---
 
-### ⚡ What's New in v10.1 (Zygisk Edition)
-- 💡 **Interactive Setup Guidance on Install**:
-  - Added clear recommendations to use latest **Zygisk Next** or **ReZygisk CI** (works seamlessly whether Zygisk is hidden or not).
-  - Clear guidance on managing DenyList (Magisk), Umount (KernelSU), and Exclude Modifications (APatch) for apps you want to screenshot vs banking apps.
+### ⚡ What's New in v10.1 — Zygisk Edition (`Simple_Flag_Secure_Zygisk_v10.1.zip`)
+- 💡 **Interactive Setup Guidance During Flashing**:
+  - The installer now provides clear, concise setup tips directly in the recovery / manager console.
+  - **Recommendation**: Highlights using **Zygisk Next** or **ReZygisk CI**, which hook apps properly even with app unmounting / hiding enabled.
+  - **DenyList / Umount Clarification**:
+    - *To screenshot an app*: If using standard Magisk Zygisk, remove the target app from DenyList (Magisk), Umount (KernelSU), or Exclude Modifications (APatch) so the in-app hook can load.
+    - *To hide from banking apps*: Simply add them to DenyList / Umount / Exclude Modifications.
+- 🔄 **In-App Manager Updates**:
+  - Native `updateJson` configured for one-click updates directly inside Magisk, KernelSU, and APatch managers.
+- 🪶 **RAM-Only Architecture**:
+  - Retains zero disk modifications and ultra-compact ~19 KB footprint.
 
 ---
 
-### 📱 What's New in v10.1 (LSPatch & LSPosed Edition)
-- 🎨 **Official App Icon**:
-  - Added modern 👀 app icon (adaptive icon with full high-resolution mipmaps and round icon support) for LSPosed and LSPatch managers.
-- 🎯 **Updated Scope**:
-  - Includes default Xposed scope metadata for seamless setup.
+### 📱 What's New in v10.1 — Non-Root & LSPosed Edition (`Simple_Flag_Secure_LSPatch_v10.1.apk`)
+- 🎨 **Official 👀 App Icon**:
+  - Added a distinctive, modern app icon featuring the signature 👀 emoji on a dark slate background.
+  - Fully supports modern Android **Adaptive Icons** (`mipmap-anydpi-v26`) as well as circular icons and legacy launcher mipmaps (`mdpi` up to `xxxhdpi`).
+  - Displays beautifully inside LSPatch Manager, LSPosed Manager, and device application lists instead of a default placeholder.
+- 🎯 **Preconfigured Default Scope**:
+  - Added default Xposed scope metadata in `AndroidManifest.xml` targeting System Framework, WhatsApp, Snapchat, and Telegram for one-tap setup in LSPosed.
+- 📦 **Dual Non-Root / Root Support**:
+  - Works both standalone inside apps patched via **[JingMatrix LSPatch](https://github.com/JingMatrix/LSPatch)** without root, and as a standard Xposed module in **LSPosed** with root.
 
 ---
 

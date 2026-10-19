@@ -125,12 +125,14 @@ If your device is not rooted (or you prefer not to touch root hooks), you can us
 - **[ReZygisk CLI (Pre-release)](https://github.com/PerformanC/ReZygisk)** (High performance alternative)
 - Built-in Zygisk in Magisk
 
-### Troubleshooting Zygisk Edition:
+### Setup & Troubleshooting for Zygisk Edition:
 
-If the module reports `NOT WORKING` or screenshots are not unlocking on your setup:
-
-1. **Use Zygisk Next or ReZygisk**: On **Zygisk Next** and **ReZygisk CI**, SFS works out of the box even with Umount / Exclude Modifications enabled on apps!
-2. **Using Magisk Built-in Zygisk?**: Magisk's built-in Zygisk completely unloads modules for apps on the DenyList, which prevents screenshot detection hiding for those apps. If you use Magisk, simply install **[Zygisk Next](https://github.com/Dr-TSNG/ZygiskNext)** or untick the app from DenyList.
+- **Recommended Setup**: Use the latest **[Zygisk Next](https://github.com/Dr-TSNG/ZygiskNext)** or **[ReZygisk CI](https://github.com/PerformanC/ReZygisk)**. They hook into apps properly even when modules or Zygisk are hidden or unmounted for that app!
+- **If Screenshots Aren't Unlocking (Standard Magisk Zygisk)**:
+  - Magisk's built-in Zygisk completely unloads modules for any app checked in the DenyList.
+  - To allow screenshots in a target app, turn **OFF** DenyList (Magisk), Umount (KernelSU), or Exclude Modifications (APatch) for that app so the in-app hook can load.
+- **If Detected by Banking Apps**:
+  - Simply add those sensitive apps to **DenyList** (Magisk), **Umount** (KernelSU), or **Exclude Modifications** (APatch) to hide root and Zygisk traces from them completely.
 
 ---
 
