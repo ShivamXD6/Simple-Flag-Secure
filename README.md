@@ -21,7 +21,7 @@
 - 🔕 **Screenshot Detection & Warning Blocking** — Prevents apps from detecting screenshots and suppresses all detection warnings or chat notifications (WhatsApp, Snapchat, etc.).
 - 🔕 **Suppresses Screen Share Warnings** — Hides the irritating _"App content hidden from screen share"_ popup on Android 15/16.
 - 🛠️ **No Root or Framework Required (LSPatch Edition)** — Non-root users can embed SFS directly into targeted APKs with zero root footprint.
-- 🛠️ **No Zygisk or LSPosed Required (Standalone Edition)** — 100% standalone option available, zero extra frameworks or meta-modules needed.
+- 🛠️ **No Zygisk or LSPosed Required (Standalone Edition)** — 100% standalone and leak-free, zero extra frameworks or meta-modules needed.
 - 🎛️ **Interactive Privacy Mode (Action & Volume Menu)** — Switch between ALLOWED and BLOCKED (`[Vol +]`) or run live diagnostics (`[Vol -]`) without rebooting.
 - 🔋 **Zero Battery Drain & RAM Friendly** — Ultra-lightweight with zero background daemons or battery consumption.
 - 🪶 **Ultra-Compact Footprint** — Down to just **~19 KB** (Zygisk), **~172 KB** (Standalone), and **~16.5 KB** (LSPatch APK) with zero bloat.
@@ -121,14 +121,14 @@ If the module reports `NOT WORKING` or screenshots are not unlocking on your set
 
 ## 🛡️ Rooted Users: Standalone Edition Setup
 
-The Standalone edition patches your system files directly on your phone without needing any Zygisk or Xposed frameworks.
+The Standalone edition patches screenshot restrictions directly on boot without needing Zygisk or Xposed.
 
-### Mount & Root Hiding:
+### 🥷 100% Leak-Free & Fully Standalone:
 
-- **100% True Standalone Architecture**: Completely self-contained with zero `/system` directory, eliminating any dependency on Magisk Magic Mount or Meta-Modules. SFS manages its own bind mount directly.
-- **Stealth `tmpfs` Staging (Zero Root Tokens)**: To prevent root detectors (such as Duck Detector) from spotting `/adb/modules/` tokens in `/proc/self/mountinfo`, SFS stages the patched framework in an ephemeral in-memory `tmpfs` before bind mounting. The kernel mount table shows only `/services.jar` from `tmpfs`—completely eliminating `/adb/modules/` paths and physical disk backing devices!
-- **KernelSU Auto-Umount**: Automatically registers the mount with KernelSU's kernel umount system (`ksud kernel umount add`), detaching the mount point from untrusted non-root applications.
-- **Prefer zero file changes?**: Just use the **Zygisk Edition**, which keeps everything in memory and modifies zero system files!
+- **No Meta-Modules Needed**: Works out of the box on Magisk, KernelSU, and APatch. You do **not** need any meta-modules (like NoMount or Hybrid Mount) anymore!
+- **Completely Leak-Free**: Built-in stealth mounting leaves zero root traces or mount leaks behind. Sensitive detectors (like Duck Detector) and banking apps cannot detect it.
+- **Zero Configuration**: Just flash the module in your root manager and do a full reboot. Everything mounts and hides automatically.
+- **Prefer zero file changes?**: Check out the **Zygisk Edition**, which runs 100% in RAM without touching any system files!
 
 ---
 

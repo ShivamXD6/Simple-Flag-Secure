@@ -6,20 +6,18 @@
 ---
 
 ### 🛡️ What's New in v11 (Standalone)
-- 🛠️ **100% True Standalone Architecture**:
-  - Completely removed the internal `system/` folder and any reliance on Magisk Magic Mount or Meta-Modules.
-  - The module now mounts itself reliably across all root managers (Magisk, KernelSU, APatch) without needing external mount engines.
-- 🥷 **Stealth `tmpfs` Staging (Bypasses Duck Detector)**:
-  - Eliminated root mount artifact detection (`/adb/modules/` tokens in field 4 of `/proc/self/mountinfo`).
-  - Stages the patched `services.jar` inside an ephemeral in-memory `tmpfs` before bind-mounting to `/system/framework/services.jar` and immediately unmounting the staging directory.
-  - Mount scanners (like Duck Detector) now see only a clean `/services.jar` backed by `tmpfs` with zero root tokens.
-- 🔄 **Redundancy & Conflict Cleanup**:
-  - Removed redundant SUSFS binary calls and obsolete mount-check heuristics.
-  - Streamlined `post-fs-data.sh`, `service.sh`, `action.sh`, and `disable.sh` for a cleaner, unified codebase.
-- 📱 **Android 15 / OxygenOS 15 Stability**:
-  - Fixed soft-reboot bootloop regressions by eliminating recursive root shared propagation (`mount --make-rshared /`) that conflicted with Zygote mount namespace sandboxing.
-- ⚡ **KernelSU Auto-Umount Support**:
-  - Integrated `ksud kernel umount add` to automatically hide the patched framework mount from non-root applications.
+- 🛠️ **100% Standalone (No Meta-Modules Needed)**:
+  - Removed all dependencies on meta-modules (like NoMount or Hybrid Mount) and Magisk Magic Mount.
+  - SFS is now completely self-mounting out of the box across Magisk, KernelSU, and APatch.
+- 🥷 **Completely Leak-Free**:
+  - Built-in stealth mounting leaves zero root traces behind.
+  - Detectors (like Duck Detector) and sensitive banking apps can no longer spot root mount artifacts.
+- 🔄 **Cleaner Codebase**:
+  - Removed redundant SUSFS binary calls and obsolete checks for a faster, cleaner boot.
+- 📱 **Android 15 / 16 Stability**:
+  - Fixed soft-reboot and bootloop issues across Android 15 & 16 (OxygenOS, ColorOS, HyperOS).
+- ⚡ **KernelSU Auto-Umount**:
+  - Automatically isolates the mount from untrusted non-root apps.
 
 ---
 
