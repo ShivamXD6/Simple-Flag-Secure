@@ -2,7 +2,7 @@
 
 ui_print "****************************************"
 ui_print " ⚡ Simple Flag Secure (Zygisk Edition)"
-ui_print "    Version: v8.0 (C++ Native Binder)"
+ui_print "    Version: v10.1 (C++ Native Binder)"
 ui_print "    Author:  @BuildBytes (@ShivamXD6)"
 ui_print "****************************************"
 ui_print ""
@@ -22,10 +22,15 @@ INSTALL_LOG="$MODPATH/sfs_install.log"
 } > "$INSTALL_LOG" 2>&1
 chmod 644 "$INSTALL_LOG" 2>/dev/null
 
-if [ -n "$KSU" ] || [ -n "$APATCH" ]; then
-    ui_print "ℹ️ KernelSU / APatch detected:"
-    ui_print "   Make sure a Zygisk provider (e.g. Zygisk Next / ReZygisk) is installed."
-fi
+ui_print "ℹ️ Setup & Compatibility Guide:"
+ui_print " • Recommended: Use latest Zygisk Next or ReZygisk CI."
+ui_print "   Works properly whether Zygisk is hidden or not!"
+ui_print " • If using standard Magisk Zygisk:"
+ui_print "   Turn OFF DenyList (Magisk) / Umount (KSU) / Exclude"
+ui_print "   Modifications (APatch) for apps you want to screenshot."
+ui_print " • If detected by banking apps:"
+ui_print "   Simply add them to DenyList (Magisk) / Umount (KSU) /"
+ui_print "   Exclude Modifications (APatch)."
 
 ui_print ""
 [ -f "$MODPATH/action.sh" ] && chmod 755 "$MODPATH/action.sh"

@@ -15,7 +15,7 @@ LLVM_STRIP = r"C:\Users\Shivam\AppData\Local\Android\Sdk\ndk\29.0.14206865\toolc
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 ZYGISK_SRC = os.path.join(PROJECT_ROOT, "zygisk_src")
 LIBS_DIR = os.path.join(ZYGISK_SRC, "libs")
-OUTPUT_ZIP = os.path.join(PROJECT_ROOT, "Simple_Flag_Secure_Zygisk_v10.0.zip")
+OUTPUT_ZIP = os.path.join(PROJECT_ROOT, "Simple_Flag_Secure_Zygisk_v10.1.zip")
 
 def build_native():
     print("Compiling Zygisk C++ shared libraries with ndk-build...")

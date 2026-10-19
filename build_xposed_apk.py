@@ -22,7 +22,7 @@ BUILD_DIR = os.path.join(MODULE_DIR, "build")
 BIN_DIR = os.path.join(BUILD_DIR, "bin")
 DEX_DIR = os.path.join(BUILD_DIR, "dex")
 
-OUTPUT_APK = os.path.join(PROJECT_ROOT, "Simple_Flag_Secure_LSPatch_v10.0.apk")
+OUTPUT_APK = os.path.join(PROJECT_ROOT, "Simple_Flag_Secure_LSPatch_v10.1.apk")
 KEYSTORE = os.path.join(PROJECT_ROOT, "debug.keystore")
 
 # Android SDK Detection

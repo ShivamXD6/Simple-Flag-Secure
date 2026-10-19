@@ -8,6 +8,8 @@ patcher_src/bin/
 *.apk
 *.idsig
 *.png
+!xposed_module/res/**/*.png
+!tools/*.png
 *.bat
 services.jar
 zygisk_src/libs/

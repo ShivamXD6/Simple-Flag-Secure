@@ -1,23 +1,33 @@
-# 👀 Simple Flag Secure v10.1 (Standalone Edition) — Stealth & Leak-Free Update
+# 👀 Simple Flag Secure v10.1 — Universal Update
 
 > [!NOTE]
-> This release focuses specifically on the **Standalone Edition** (`Simple_Flag_Secure_v10.1.zip`), introducing a 100% standalone mounting architecture with zero root-token stealth staging. The Zygisk and Non-Root (LSPatch) editions remain on v10.0.
+> This release updates **all three variants** (Standalone, Zygisk, and LSPatch/LSPosed) to **v10.1** with improved mounting resilience, setup guidance, and official app icon!
 
 ---
 
-### 🛡️ What's New in v10.1 (Standalone)
-- 🛠️ **100% Standalone (No Meta-Modules Needed)**:
-  - Removed all dependencies on meta-modules (like NoMount or Hybrid Mount) and Magisk Magic Mount.
-  - SFS is now completely self-mounting out of the box across Magisk, KernelSU, and APatch.
-- 🥷 **Completely Leak-Free**:
-  - Built-in stealth mounting leaves zero root traces behind.
-  - Detectors (like Duck Detector) and sensitive banking apps can no longer spot root mount artifacts.
-- 🔄 **Cleaner Codebase**:
-  - Removed redundant SUSFS binary calls and obsolete checks for a faster, cleaner boot.
+### 🛡️ What's New in v10.1 (Standalone Edition)
+- 🛠️ **Two-Tier Universal Mounting**:
+  - Automatically attempts stealth in-memory staging to eliminate `/adb/` root tokens from mountinfo.
+  - Automatically falls back to direct bind mounting on strict kernels (such as Samsung Knox / One UI) where in-memory mounting is restricted, ensuring SFS works everywhere!
+- 🥷 **KernelSU & SusFS Integration**:
+  - Automatically registers `ksud kernel umount` and SusFS stealth hiding if available.
 - 📱 **Android 15 / 16 Stability**:
-  - Fixed soft-reboot and bootloop issues across Android 15 & 16 (OxygenOS, ColorOS, HyperOS).
-- ⚡ **KernelSU Auto-Umount**:
-  - Automatically isolates the mount from untrusted non-root apps.
+  - Fixed soft-reboot and mounting issues across OxygenOS, ColorOS, HyperOS, and One UI.
+
+---
+
+### ⚡ What's New in v10.1 (Zygisk Edition)
+- 💡 **Interactive Setup Guidance on Install**:
+  - Added clear recommendations to use latest **Zygisk Next** or **ReZygisk CI** (works seamlessly whether Zygisk is hidden or not).
+  - Clear guidance on managing DenyList (Magisk), Umount (KernelSU), and Exclude Modifications (APatch) for apps you want to screenshot vs banking apps.
+
+---
+
+### 📱 What's New in v10.1 (LSPatch & LSPosed Edition)
+- 🎨 **Official App Icon**:
+  - Added modern 👀 app icon (adaptive icon with full high-resolution mipmaps and round icon support) for LSPosed and LSPatch managers.
+- 🎯 **Updated Scope**:
+  - Includes default Xposed scope metadata for seamless setup.
 
 ---
 

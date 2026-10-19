@@ -85,11 +85,11 @@ Simple Flag Secure is available in three distinct variants:
 
 ## 📱 Non-Root Users: LSPatch Setup Guide
 
-If your device is not rooted (or you prefer not to touch root hooks), you can use the **LSPatch variant** (`Simple_Flag_Secure_LSPatch_v10.0.apk`) to patch any restricted app directly on your phone:
+If your device is not rooted (or you prefer not to touch root hooks), you can use the **LSPatch variant** (`Simple_Flag_Secure_LSPatch_v10.1.apk`) to patch any restricted app directly on your phone:
 
 > [!NOTE]
 > **Using LSPosed instead?**
-> This exact same APK is a fully compliant standard Xposed module! If you have root with **LSPosed**, you can simply install `Simple_Flag_Secure_LSPatch_v10.0.apk`, enable it in the LSPosed Manager, check your target apps in its scope, and you are good to go!
+> This exact same APK is a fully compliant standard Xposed module! If you have root with **LSPosed**, you can simply install `Simple_Flag_Secure_LSPatch_v10.1.apk`, enable it in the LSPosed Manager, check your target apps in its scope, and you are good to go!
 
 ### Recommended Tool
 
@@ -99,7 +99,7 @@ If your device is not rooted (or you prefer not to touch root hooks), you can us
 
 1. **Download & Install**:
    - Install the latest **[JingMatrix LSPatch release](https://github.com/JingMatrix/LSPatch/releases)** APK on your device.
-   - Download `Simple_Flag_Secure_LSPatch_v10.0.apk` from [Releases](https://github.com/ShivamXD6/Simple-Flag-Secure/releases/latest).
+   - Download `Simple_Flag_Secure_LSPatch_v10.1.apk` from [Releases](https://github.com/ShivamXD6/Simple-Flag-Secure/releases/latest).
 2. **Open LSPatch**:
    - Open LSPatch and grant the requested storage permissions.
    - Go to the **Manage** tab → Tap the `+` button → Select **New Patch**.
@@ -107,7 +107,7 @@ If your device is not rooted (or you prefer not to touch root hooks), you can us
    - Choose the application where screenshots are blocked (either from installed apps or by picking an APK file directly).
 4. **Embed Simple Flag Secure**:
    - Choose **Portable Mode** (embeds module directly so LSPatch app isn't needed later).
-   - Under **Embed modules**, tap `+` and choose the downloaded `Simple_Flag_Secure_LSPatch_v10.0.apk`.
+   - Under **Embed modules**, tap `+` and choose the downloaded `Simple_Flag_Secure_LSPatch_v10.1.apk`.
 5. **Start Patching**:
    - Tap **Start Patching**. LSPatch will recompile and resign the target APK.
 6. **Install the Patched App**:
@@ -171,9 +171,9 @@ Need to temporarily block screenshots and screen recordings for extra privacy? S
 ## 📥 Installation Summary
 
 1. **Download your preferred edition from [Releases](https://github.com/ShivamXD6/Simple-Flag-Secure/releases/latest):**
-   - ⚡ `Simple_Flag_Secure_Zygisk_v10.0.zip` (for Zygisk users)
+   - ⚡ `Simple_Flag_Secure_Zygisk_v10.1.zip` (for Zygisk users)
    - 🛡️ `Simple_Flag_Secure_v10.1.zip` (for Standalone users)
-   - 📱 `Simple_Flag_Secure_LSPatch_v10.0.apk` (for Non-Root LSPatch / LSPosed users)
+   - 📱 `Simple_Flag_Secure_LSPatch_v10.1.apk` (for Non-Root LSPatch / LSPosed users)
 2. **Installation by Variant:**
    - **For Zygisk & Standalone**: Flash the ZIP inside Magisk, KernelSU, or APatch manager → **Modules** → **Install from storage** → Reboot.
    - **For Non-Root (LSPatch) & LSPosed**: Follow the dedicated [📱 LSPatch & LSPosed Setup Guide](#-non-root-users-lspatch-setup-guide) above to patch your target apps with zero root, or install and enable it inside your LSPosed manager!
