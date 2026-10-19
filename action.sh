@@ -29,7 +29,6 @@ else
 fi
 
 MOD_JAR="$MODDIR/services.jar"
-[ -f "$MOD_JAR" ] || MOD_JAR="$MODDIR/system/framework/services.jar"
 SYS_JAR="/system/framework/services.jar"
 if [ -f "$MOD_JAR" ] && cmp -s "$MOD_JAR" "$SYS_JAR" 2>/dev/null; then
     MOUNT_OK=true

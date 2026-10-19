@@ -125,9 +125,9 @@ The Standalone edition patches your system files directly on your phone without 
 
 ### Mount & Root Hiding:
 
-- **Built-in Mounting**: Standalone has built-in mounting support for Magisk, KernelSU, and APatch.
-- **Using SUSFS?**: If your kernel has **SUSFS**, Standalone is completely hidden out of the box—you do **not** need any extra modules to hide it!
-- **Without SUSFS**: If a sensitive banking app detects modified system files, you can optionally pair it with a mount hider like `NoMount` or `Hybrid Mount`.
+- **100% True Standalone Architecture**: Completely self-contained with zero `/system` directory, eliminating any dependency on Magisk Magic Mount or Meta-Modules. SFS manages its own bind mount directly.
+- **Stealth `tmpfs` Staging (Zero Root Tokens)**: To prevent root detectors (such as Duck Detector) from spotting `/adb/modules/` tokens in `/proc/self/mountinfo`, SFS stages the patched framework in an ephemeral in-memory `tmpfs` before bind mounting. The kernel mount table shows only `/services.jar` from `tmpfs`—completely eliminating `/adb/modules/` paths and physical disk backing devices!
+- **KernelSU Auto-Umount**: Automatically registers the mount with KernelSU's kernel umount system (`ksud kernel umount add`), detaching the mount point from untrusted non-root applications.
 - **Prefer zero file changes?**: Just use the **Zygisk Edition**, which keeps everything in memory and modifies zero system files!
 
 ---
@@ -157,7 +157,7 @@ Need to temporarily block screenshots and screen recordings for extra privacy? S
 
 1. **Download your preferred edition from [Releases](https://github.com/ShivamXD6/Simple-Flag-Secure/releases/latest):**
    - ⚡ `Simple_Flag_Secure_Zygisk_v10.0.zip` (for Zygisk users)
-   - 🛡️ `Simple_Flag_Secure_v10.0.zip` (for Standalone users)
+   - 🛡️ `Simple_Flag_Secure_v11.zip` (for Standalone users)
    - 📱 `Simple_Flag_Secure_LSPatch_v10.0.apk` (for Non-Root LSPatch / LSPosed users)
 2. **Installation by Variant:**
    - **For Zygisk & Standalone**: Flash the ZIP inside Magisk, KernelSU, or APatch manager → **Modules** → **Install from storage** → Reboot.

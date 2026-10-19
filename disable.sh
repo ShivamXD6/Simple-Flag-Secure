@@ -1,12 +1,11 @@
 #!/system/bin/sh
 
 MODPATH="${0%/*}"
-BIN="$MODPATH/system/bin"
+BIN="$MODPATH/bin"
 STOCK="/system/framework"
-MOD="$MODPATH/system/framework"
 ARCH=$(getprop ro.product.cpu.abi)
 
-mkdir -p "$MOD" "$BIN"
+mkdir -p "$BIN"
 
 LAST_MSG=""
 notify() {
@@ -24,29 +23,12 @@ padh() {
   grep -m 1 "^$1=" "$2" 2>/dev/null | sed 's/^.*=//'
 }
 
-ADBDIR="/data/adb"
-if [ -d "$ADBDIR/magisk" ] && magisk -V >/dev/null 2>&1; then
-  ROOT="Magisk"
-elif [ -d "$ADBDIR/ksu" ] && ksud -V >/dev/null 2>&1; then
-  ROOT="KernelSU"
-elif [ -d "$ADBDIR/ap" ] && apd -V >/dev/null 2>&1; then
-  ROOT="APatch"
-else
-  ROOT="Unknown"
-fi
-
-if [ "$ROOT" != "Magisk" ] && [ -d "$ADBDIR/metamodule" ]; then
-  MOUNT_MODE="Meta-Module"
-else
-  MOUNT_MODE="Standalone"
-fi
-
 echo "###################################"
 echo " 👀 $(padh "name" "$MODPATH/module.prop")"
 echo " 🌟 Made By $(padh "author" "$MODPATH/module.prop")"
 echo " ⚡ Version - $(padh "version" "$MODPATH/module.prop")"
 echo " 💻 Architecture - $ARCH"
-echo " 📂 Mounted: $MOUNT_MODE"
+echo " 📂 Mounted: Standalone"
 echo "###################################"
 echo
 
@@ -69,7 +51,7 @@ echo "=================================================="
 
 setprop persist.sys.sfs.screenshot true
 
-dalvikvm -Xmx512m -Djava.io.tmpdir="$MOD" -cp "$BIN/sfs.jar" build.bytes.sfs.SfsPatcher "$jar_path" "$MOD/$jar_name" || {
+dalvikvm -Xmx512m -Djava.io.tmpdir="$MODPATH" -cp "$BIN/sfs.jar" build.bytes.sfs.SfsPatcher "$jar_path" "$MODPATH/$jar_name" || {
   echo "💥 Dalvik patcher failed for $jar_name"
   exit 1
 }
@@ -80,11 +62,7 @@ dalvikvm -Xmx512m -Djava.io.tmpdir="$MOD" -cp "$BIN/sfs.jar" build.bytes.sfs.Sfs
 
 rm -f "$MODPATH/disable.sh"
 rm -rf "$BIN"
-
-if [ "$ROOT" != "Magisk" ] && [ "$MOUNT_MODE" != "Meta-Module" ]; then
-  mv "$MOD/$jar_name" "$MODPATH/$jar_name"
-  rm -rf "$MODPATH/system"
-fi
+rm -rf "$MODPATH/system" 2>/dev/null
 
 rm -rf /data/dalvik-cache/* 2>/dev/null
 

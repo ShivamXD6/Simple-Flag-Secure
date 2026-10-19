@@ -28,25 +28,7 @@ done
 
 sleep 3
 
-ADBDIR="/data/adb"
-if [ -d "$ADBDIR/magisk" ] && magisk -V >/dev/null 2>&1; then
-  ROOT="Magisk"
-elif [ -d "$ADBDIR/ksu" ] && ksud -V >/dev/null 2>&1; then
-  ROOT="KernelSU"
-elif [ -d "$ADBDIR/ap" ] && apd -V >/dev/null 2>&1; then
-  ROOT="APatch"
-else
-  ROOT="Unknown"
-fi
-
-if [ "$ROOT" != "Magisk" ] && [ -d "$ADBDIR/metamodule" ]; then
-  MOUNT_MODE="Meta-Module"
-else
-  MOUNT_MODE="Standalone"
-fi
-
 MOD_JAR="$MODDIR/services.jar"
-[ -f "$MOD_JAR" ] || MOD_JAR="$MODDIR/system/framework/services.jar"
 SYS_JAR="/system/framework/services.jar"
 
 if [ -f "$MOD_JAR" ] && cmp -s "$MOD_JAR" "$SYS_JAR" 2>/dev/null; then
@@ -65,9 +47,9 @@ if [ -f "$MOD_JAR" ] && cmp -s "$MOD_JAR" "$SYS_JAR" 2>/dev/null; then
     sed -i "s#^description=.*#description=[ $ICON $STATUS ] $BASE_DESC#" "$MODDIR/module.prop" 2>/dev/null
 
     if [ "$CURRENT" = "false" ]; then
-        NOTIF_BODY="Mounted ($MOUNT_MODE). Privacy Mode active: screenshots blocked everywhere."
+        NOTIF_BODY="Mounted (Standalone). Privacy Mode active: screenshots blocked everywhere."
     else
-        NOTIF_BODY="Mounted ($MOUNT_MODE). Screenshots and recordings allowed everywhere!"
+        NOTIF_BODY="Mounted (Standalone). Screenshots and recordings allowed everywhere!"
     fi
     notify "$ICON $STATUS • Simple Flag Secure" "$NOTIF_BODY" "$NOTIF_ICON" "SFS_BOOT"
 else

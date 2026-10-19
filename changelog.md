@@ -1,3 +1,28 @@
+# 👀 Simple Flag Secure v11 (Standalone Edition) — True Standalone & Stealth Mount Release
+
+> [!NOTE]
+> This release focuses specifically on the **Standalone Edition** (`Simple_Flag_Secure_v11.zip`), introducing a 100% true standalone mounting architecture with zero root-token stealth staging. The Zygisk and Non-Root (LSPatch) editions remain on v10.0.
+
+---
+
+### 🛡️ What's New in v11 (Standalone)
+- 🛠️ **100% True Standalone Architecture**:
+  - Completely removed the internal `system/` folder and any reliance on Magisk Magic Mount or Meta-Modules.
+  - The module now mounts itself reliably across all root managers (Magisk, KernelSU, APatch) without needing external mount engines.
+- 🥷 **Stealth `tmpfs` Staging (Bypasses Duck Detector)**:
+  - Eliminated root mount artifact detection (`/adb/modules/` tokens in field 4 of `/proc/self/mountinfo`).
+  - Stages the patched `services.jar` inside an ephemeral in-memory `tmpfs` before bind-mounting to `/system/framework/services.jar` and immediately unmounting the staging directory.
+  - Mount scanners (like Duck Detector) now see only a clean `/services.jar` backed by `tmpfs` with zero root tokens.
+- 🔄 **Redundancy & Conflict Cleanup**:
+  - Removed redundant SUSFS binary calls and obsolete mount-check heuristics.
+  - Streamlined `post-fs-data.sh`, `service.sh`, `action.sh`, and `disable.sh` for a cleaner, unified codebase.
+- 📱 **Android 15 / OxygenOS 15 Stability**:
+  - Fixed soft-reboot bootloop regressions by eliminating recursive root shared propagation (`mount --make-rshared /`) that conflicted with Zygote mount namespace sandboxing.
+- ⚡ **KernelSU Auto-Umount Support**:
+  - Integrated `ksud kernel umount add` to automatically hide the patched framework mount from non-root applications.
+
+---
+
 # 👀 Simple Flag Secure v10.0 — Unified Triple-Architecture Release
 
 > [!NOTE]
@@ -25,9 +50,12 @@
 
 ### 🛡️ [v8] Standalone Edition (No Zygisk Required)
 - 🛠️ **100% Standalone**: Automatically patches screenshot restrictions on boot without needing Zygisk or Xposed.
-- 📱 **OnePlus & Oppo Fix**: Fixed screenshot blocking on OnePlus (OxygenOS & ColorOS 14) so screenshots capture properly.
-- 🔄 **Built-in Auto-Mount**: Works out of the box on Magisk, KernelSU, and APatch.
-- 🥷 **Full SUSFS Support**: If your kernel supports SUSFS, Standalone is completely hidden without needing any extra hiding modules.
+- 📱 **OnePlus & Oppo Fix**: Fixed screenshot blocking on OnePlus (OxygenOS & ColorOS 14/15) so screenshots capture properly.
+- 🔄 **Built-in Auto-Mount & Android 15 Stability**: Safe mounting without breaking Zygote namespaces or causing soft-reboot loops.
+- 🥷 **Advanced Mount Hiding & Anti-Detection**:
+  - **Ephemeral `tmpfs` Staging**: Eliminates `/adb/modules/` tokens and disk partition artifacts from `/proc/self/mountinfo`. Scanners like Duck Detector see only a clean `/services.jar` from `tmpfs`.
+  - **KernelSU Auto-Umount Support**: Integrates with `ksud kernel umount` to automatically unmount the target for untrusted non-root apps.
+  - **Meta-Module & NoMount Compatible**: Zero conflicts with NoMount or Meta-Modules.
 - 🎛️ **Action Menu & Privacy Toggle**: Tap Action in your root manager and press **Volume Up** to toggle Privacy Mode (block screenshots everywhere) or **Volume Down** to save logs.
 - 🪶 **Tiny Size**: Just **~172 KB**.
 
