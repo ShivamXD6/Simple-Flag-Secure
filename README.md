@@ -15,13 +15,29 @@
 
 ---
 
+## 📑 Table of Contents
+
+- [✨ Features](#-features)
+- [🏆 Why Simple Flag Secure?](#-why-simple-flag-secure)
+- [🚀 Choose Your Variant](#-choose-your-variant)
+- [📱 Non-Root Users: LSPatch Setup Guide](#-non-root-users-lspatch-setup-guide)
+- [⚡ Rooted Users: Zygisk Edition Setup](#-rooted-users-zygisk-edition-setup)
+- [🛡️ Rooted Users: Standalone Edition Setup](#-rooted-users-standalone-edition-setup)
+- [🎛️ Privacy Mode (Instant Toggle)](#-privacy-mode-instant-toggle)
+- [📥 Installation Summary](#-installation-summary)
+- [📢 Future Updates & Support](#-important-note-for-future-updates--support)
+- [🙏 Support & Donations](#-support--donations)
+- [🙌 Credits](#-credits)
+
+---
+
 ## ✨ Features
 
 - 🚫 **Unlocks Screenshots & Screen Recordings Everywhere** — Captures restricted screens in banking apps, financial services, WhatsApp view-once media, profile photos, and incognito tabs.
 - 🔕 **Screenshot Detection & Warning Blocking** — Prevents apps from detecting screenshots and suppresses all detection warnings or chat notifications (WhatsApp, Snapchat, etc.).
 - 🔕 **Suppresses Screen Share Warnings** — Hides the irritating _"App content hidden from screen share"_ popup on Android 15/16.
 - 🛠️ **No Root or Framework Required (LSPatch Edition)** — Non-root users can embed SFS directly into targeted APKs with zero root footprint.
-- 🛠️ **No Zygisk or LSPosed Required (Standalone Edition)** — 100% standalone and leak-free, zero extra frameworks or meta-modules needed.
+- 🛠️ **No Zygisk or LSPosed Required (Standalone Edition)** — 100% standalone, zero extra frameworks or meta-modules needed.
 - 🎛️ **Interactive Privacy Mode (Action & Volume Menu)** — Switch between ALLOWED and BLOCKED (`[Vol +]`) or run live diagnostics (`[Vol -]`) without rebooting.
 - 🔋 **Zero Battery Drain & RAM Friendly** — Ultra-lightweight with zero background daemons or battery consumption.
 - 🪶 **Ultra-Compact Footprint** — Down to just **~19 KB** (Zygisk), **~172 KB** (Standalone), and **~16.5 KB** (LSPatch APK) with zero bloat.
@@ -120,14 +136,14 @@ If the module reports `NOT WORKING` or screenshots are not unlocking on your set
 
 ## 🛡️ Rooted Users: Standalone Edition Setup
 
-The Standalone edition patches screenshot restrictions directly on boot without needing Zygisk or Xposed.
+The **Standalone Edition** patches screenshot restrictions directly at boot without needing Zygisk, LSPosed, or any meta-modules (like NoMount or Hybrid Mount).
 
-### 🥷 100% Leak-Free & Fully Standalone:
+It operates completely standalone and hides itself well on most systems. However, on some stock ROMs with strict kernel protections (such as Samsung Knox / One UI), the kernel does not allow mounting from in-memory staging, forcing the module to fall back to legacy direct bind-mounting to ensure it still functions. On these devices, the fallback mount path may be detected unless:
+- You have a kernel with **SusFS** support, or
+- You use a meta-module like **NoMount** to hide the mount detection.
 
-- **No Meta-Modules Needed**: Works out of the box on Magisk, KernelSU, and APatch. You do **not** need any meta-modules (like NoMount or Hybrid Mount) anymore!
-- **Completely Leak-Free**: Built-in stealth mounting leaves zero root traces or mount leaks behind. Sensitive detectors (like Duck Detector) and banking apps cannot detect it.
-- **Zero Configuration**: Just flash the module in your root manager and do a full reboot. Everything mounts and hides automatically.
-- **Prefer zero file changes?**: Check out the **Zygisk Edition**, which runs 100% in RAM without touching any system files!
+> [!TIP]
+> If you are on Samsung Knox or a strict ROM and do not have SusFS or NoMount, simply use the **[⚡ Zygisk Edition](#-rooted-users-zygisk-edition-setup)** with the latest **Zygisk Next** or **ReZygisk**, which runs 100% in RAM with zero filesystem mounts.
 
 ---
 
