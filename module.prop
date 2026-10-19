@@ -1,7 +1,7 @@
 id=simple_flag_secure
 name=Simple Flag Secure
-version=v11
-versionCode=110
+version=v10.1
+versionCode=101
 author=@BuildBytes (@ShivamXD6 aka @ShastikXD)
 updateJson=https://raw.githubusercontent.com/ShivamXD6/Simple-Flag-Secure/main/update.json
 description=Bypasses screenshot restrictions and hides screenshot detection.

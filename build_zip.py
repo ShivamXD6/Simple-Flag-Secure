@@ -2,7 +2,7 @@
 import os
 import zipfile
 
-OUTPUT_ZIP = "Simple_Flag_Secure_v11.zip"
+OUTPUT_ZIP = "Simple_Flag_Secure_v10.1.zip"
 
 FILES_TO_ADD = [
     ("META-INF/com/google/android/update-binary", "META-INF/com/google/android/update-binary"),

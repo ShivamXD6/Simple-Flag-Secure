@@ -1,11 +1,11 @@
-# 👀 Simple Flag Secure v11 (Standalone Edition) — True Standalone & Stealth Mount Release
+# 👀 Simple Flag Secure v10.1 (Standalone Edition) — Stealth & Leak-Free Update
 
 > [!NOTE]
-> This release focuses specifically on the **Standalone Edition** (`Simple_Flag_Secure_v11.zip`), introducing a 100% true standalone mounting architecture with zero root-token stealth staging. The Zygisk and Non-Root (LSPatch) editions remain on v10.0.
+> This release focuses specifically on the **Standalone Edition** (`Simple_Flag_Secure_v10.1.zip`), introducing a 100% standalone mounting architecture with zero root-token stealth staging. The Zygisk and Non-Root (LSPatch) editions remain on v10.0.
 
 ---
 
-### 🛡️ What's New in v11 (Standalone)
+### 🛡️ What's New in v10.1 (Standalone)
 - 🛠️ **100% Standalone (No Meta-Modules Needed)**:
   - Removed all dependencies on meta-modules (like NoMount or Hybrid Mount) and Magisk Magic Mount.
   - SFS is now completely self-mounting out of the box across Magisk, KernelSU, and APatch.

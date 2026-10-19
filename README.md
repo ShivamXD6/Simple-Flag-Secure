@@ -113,9 +113,8 @@ If your device is not rooted (or you prefer not to touch root hooks), you can us
 
 If the module reports `NOT WORKING` or screenshots are not unlocking on your setup:
 
-1. **Switch to Zygisk Next**: Even if you are using Magisk, installing **Zygisk Next** fixes issues on heavy skins like HyperOS, MIUI, and One UI.
-2. **Try ReZygisk latest pre-release**: Offers the newest compatibility updates.
-3. **Turn off DenyList / Umount / Exclude Modifications**: If an app still blocks screenshots, make sure to **turn off DenyList** (Magisk / Zygisk Next), **turn off Umount** (KernelSU & forks), or **disable Exclude Modifications** (APatch & forks) for that specific app so the in-app Zygisk hook can attach and clear the flags directly!
+1. **Use Zygisk Next or ReZygisk**: On **Zygisk Next** and **ReZygisk CI**, SFS works out of the box even with Umount / Exclude Modifications enabled on apps!
+2. **Using Magisk Built-in Zygisk?**: Magisk's built-in Zygisk completely unloads modules for apps on the DenyList, which prevents screenshot detection hiding for those apps. If you use Magisk, simply install **[Zygisk Next](https://github.com/Dr-TSNG/ZygiskNext)** or untick the app from DenyList.
 
 ---
 
@@ -157,7 +156,7 @@ Need to temporarily block screenshots and screen recordings for extra privacy? S
 
 1. **Download your preferred edition from [Releases](https://github.com/ShivamXD6/Simple-Flag-Secure/releases/latest):**
    - ⚡ `Simple_Flag_Secure_Zygisk_v10.0.zip` (for Zygisk users)
-   - 🛡️ `Simple_Flag_Secure_v11.zip` (for Standalone users)
+   - 🛡️ `Simple_Flag_Secure_v10.1.zip` (for Standalone users)
    - 📱 `Simple_Flag_Secure_LSPatch_v10.0.apk` (for Non-Root LSPatch / LSPosed users)
 2. **Installation by Variant:**
    - **For Zygisk & Standalone**: Flash the ZIP inside Magisk, KernelSU, or APatch manager → **Modules** → **Install from storage** → Reboot.
