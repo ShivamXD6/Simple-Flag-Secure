@@ -3,6 +3,11 @@
 > [!NOTE]
 > This release updates **all three variants** (Standalone, Zygisk, and LSPatch/LSPosed) to **v10.1**, bringing universal mounting resilience, interactive setup guidance, and an official app icon!
 
+> [!WARNING]
+> **Clean Flash Required** (Prevents bootloops when updating from v10.0):
+> - **Temporary Root Users**: Remove current one ➔ Full Reboot (temp root gone) ➔ Take Root Again ➔ Flash SFS v10.1 ➔ Soft Reboot ➔ Done
+> - **Permanent Root Users**: Remove current one ➔ Full Reboot ➔ Flash SFS v10.1 ➔ Full Reboot ➔ Done
+
 ---
 
 ### 🛡️ What's New in v10.1 — Standalone Edition (`Simple_Flag_Secure_v10.1.zip`)
